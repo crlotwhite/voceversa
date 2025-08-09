@@ -60,6 +60,11 @@ include(CTest)
 # Core library (interfaces + platform implementation)
 add_library(voceversa_core
   src/platform/LinuxPlatformIO.cpp
+  src/world/F0Extraction.cpp
+  src/world/SpectralAnalysis.cpp
+  src/world/D4C.cpp
+  src/world/WorldAnalysisNode.cpp
+  src/world/WorldSynthesisNode.cpp
 )
 target_include_directories(voceversa_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(voceversa_core PUBLIC cxx_std_17)
@@ -83,4 +88,11 @@ if(BUILD_TESTING)
   target_link_libraries(core_tests PRIVATE voceversa_core)
   target_include_directories(core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
   add_test(NAME core_tests COMMAND core_tests)
+
+  add_executable(world_tests
+    tests/test_world.cpp
+  )
+  target_link_libraries(world_tests PRIVATE voceversa_core)
+  target_include_directories(world_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  add_test(NAME world_tests COMMAND world_tests)
 endif()

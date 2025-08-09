@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace vv {
 
@@ -41,6 +42,33 @@ public:
     uint16_t bitDepth() const { return bitDepth_; }
 
     Clock::time_point timestamp() const { return timestamp_; }
+
+    // Feature/metadata attachments for analysis pipelines
+    void setFeature(const std::string& key, std::vector<float> values) {
+        features_[key] = std::move(values);
+    }
+    bool hasFeature(const std::string& key) const {
+        return features_.find(key) != features_.end();
+    }
+    const std::vector<float>* getFeature(const std::string& key) const {
+        auto it = features_.find(key);
+        return it == features_.end() ? nullptr : &it->second;
+    }
+    std::vector<float>* getFeature(const std::string& key) {
+        auto it = features_.find(key);
+        return it == features_.end() ? nullptr : &it->second;
+    }
+
+    void setScalar(const std::string& key, double value) {
+        scalars_[key] = value;
+    }
+    bool hasScalar(const std::string& key) const {
+        return scalars_.find(key) != scalars_.end();
+    }
+    double getScalar(const std::string& key, double def = 0.0) const {
+        auto it = scalars_.find(key);
+        return it == scalars_.end() ? def : it->second;
+    }
 
     // Serialization placeholders (simple form)
     std::string serialize() const {
@@ -90,6 +118,8 @@ private:
     uint16_t channels_{1};
     uint16_t bitDepth_{32};
     Clock::time_point timestamp_{Clock::now()};
+    std::unordered_map<std::string, std::vector<float>> features_{};
+    std::unordered_map<std::string, double> scalars_{};
 };
 
 } // namespace vv
