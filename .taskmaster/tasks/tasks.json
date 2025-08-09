@@ -682,11 +682,22 @@
             "testStrategy": "버전 태깅 자동화 검증, 라이선스 규정 준수 확인, 릴리스 아티팩트 다운로드 및 실행 테스트"
           }
         ]
+      },
+      {
+        "id": 11,
+        "title": "UTAU 포맷 아티팩트 생성 및 호환성 검증",
+        "description": "UTAU 포맷(f0.txt, sp.bin, ap.bin, meta.json)으로 분석/합성 아티팩트를 내보내고 world4utau와의 호환성을 검증하는 작업. WORLD ON/OFF 빌드와 테스트를 모두 통과하도록 품질 게이트를 설정합니다.",
+        "details": "UTAU 포맷 메모:\n- f0.txt: 한 줄당 한 프레임 f0(Hz)\n- sp.bin/ap.bin: double 리틀엔디언, 길이 = frames*bins, 프레임 우선 row-major\n- meta.json: frames, bins, fftSize, framePeriodMs 등 합성에 필요한 메타 포함\n\n품질 게이트:\n- Build: PASS (WORLD ON/OFF)\n- Tests: PASS\n- 주요 경로 스모크: vv_world 분석/합성 경로 컴파일 완료\n\n다음 단계(옵션):\n- world4utau의 정확한 파일 배치/이름 규약 맞춤 옵션 추가\n- f0 추정 알고리즘 선택(Harvest/DIO) CLI 옵션화\n- sp/ap bin의 float/double 선택 저장 옵션\n- 멀티채널/스테레오 지원\n\nNote: 필요하면 world4utau와 100% 호환되는 경로/이름/데이터타입으로 스펙을 더 엄격히 맞추겠습니다.",
+        "testStrategy": "- WORLD ON/OFF 모두 빌드 성공 확인\n- 단위/통합 테스트 전부 PASS\n- vv_world 경로의 분석→합성 파이프라인 컴파일/링크 스모크 체크",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-09T11:30:33.895Z",
-      "updated": "2025-08-09T14:15:03.667Z",
+      "updated": "2025-08-09T16:23:04.214Z",
       "description": "Tasks for master context"
     }
   }
