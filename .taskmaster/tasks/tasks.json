@@ -211,7 +211,62 @@
           2
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "WAV 파일 헤더 파싱 및 생성 유틸리티 구현",
+            "description": "WAV 파일의 RIFF 헤더 구조를 파싱하고 생성하는 기본 유틸리티 함수들을 구현합니다. 다양한 비트 깊이와 샘플레이트를 지원하는 헤더 구조체를 정의합니다.",
+            "dependencies": [],
+            "details": "WavHeader 구조체 정의 (RIFF, WAVE, fmt, data 청크), 엔디안 변환 함수, 헤더 유효성 검증, 16-bit/24-bit/32-bit float PCM 포맷 지원. include/audio/wav_io.h와 src/audio/wav_io.cpp 파일 생성. 플랫폼별 바이트 순서 처리를 위한 매크로 정의.",
+            "status": "pending",
+            "testStrategy": "다양한 포맷의 WAV 파일 헤더 파싱 테스트, 잘못된 헤더에 대한 에러 처리 검증"
+          },
+          {
+            "id": 2,
+            "title": "WAV 파일 읽기 기능 구현",
+            "description": "WAV 파일에서 오디오 데이터를 읽어오는 기능을 구현합니다. 다양한 포맷의 WAV 파일을 지원하고 오디오 버퍼로 로드하는 기능을 제공합니다.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "WavReader 클래스 구현, 파일 스트림 처리, 청크별 데이터 읽기, 샘플 포맷 변환 (int16 → float, int24 → float, float32), 스테레오/모노 채널 처리. 대용량 파일을 위한 스트리밍 읽기 지원. 메모리 효율적인 버퍼 관리.",
+            "status": "pending",
+            "testStrategy": "표준 WAV 파일들로 읽기 정확성 테스트, 메모리 사용량 모니터링, 대용량 파일 스트리밍 테스트"
+          },
+          {
+            "id": 3,
+            "title": "WAV 파일 쓰기 기능 구현",
+            "description": "오디오 버퍼 데이터를 WAV 파일 포맷으로 저장하는 기능을 구현합니다. 다양한 비트 깊이와 샘플레이트로 출력할 수 있도록 합니다.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "WavWriter 클래스 구현, 헤더 생성 및 쓰기, 오디오 데이터 포맷 변환 (float → int16/int24/float32), 파일 크기 계산 및 헤더 업데이트. 실시간 쓰기를 위한 버퍼링 지원. 파일 무결성 보장을 위한 예외 처리.",
+            "status": "pending",
+            "testStrategy": "생성된 WAV 파일의 다른 소프트웨어 호환성 테스트, 포맷별 출력 품질 검증"
+          },
+          {
+            "id": 4,
+            "title": "오디오 버퍼 관리 및 기본 신호 처리 유틸리티 구현",
+            "description": "오디오 데이터를 효율적으로 관리하는 AudioBuffer 클래스와 스테레오/모노 변환, 리샘플링 등 기본 신호 처리 기능을 구현합니다.",
+            "dependencies": [
+              "4.2",
+              "4.3"
+            ],
+            "details": "AudioBuffer 클래스 (멀티채널 지원, 샘플 인덱싱, 메모리 관리), 스테레오↔모노 변환, 선형/큐빅 보간 리샘플링, 게인 조절, 믹싱 기능. 템플릿 기반으로 float/double 정밀도 지원. SIMD 최적화 고려사항 포함.",
+            "status": "pending",
+            "testStrategy": "신호 변환 정확성 검증, 리샘플링 품질 테스트, 메모리 누수 검사"
+          },
+          {
+            "id": 5,
+            "title": "윈도우 함수 및 FFT 래퍼 구현",
+            "description": "주파수 도메인 분석을 위한 윈도우 함수들(Hanning, Hamming, Blackman)과 FFT/IFFT 기능을 구현합니다.",
+            "dependencies": [
+              "4.4"
+            ],
+            "details": "WindowFunction 클래스로 다양한 윈도우 타입 지원, FFTW3 또는 KissFFT 라이브러리 통합, FFTWrapper 클래스로 forward/inverse 변환, 복소수 데이터 처리, 제로 패딩 및 윈도우 적용 자동화. 실시간 처리를 위한 STFT 기능 포함.",
+            "status": "pending",
+            "testStrategy": "윈도우 함수 수학적 정확성 검증, FFT 변환 결과 검증, 성능 벤치마크"
+          }
+        ]
       },
       {
         "id": 5,
@@ -225,7 +280,60 @@
           4
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "PSOLA 피치 마킹 및 분석 모듈 구현",
+            "description": "PSOLA 알고리즘의 핵심인 피치 동기화 포인트 검출 및 파형 분할을 위한 피치 마킹 시스템 구현",
+            "dependencies": [],
+            "details": "자기상관 함수 또는 AMDF(Average Magnitude Difference Function) 기반 피치 추정 알고리즘 구현. 피치 마크 위치에서 파형을 분할하는 윈도우 함수 적용. 피치 주기 검증 및 보정 로직 포함. PitchMarker 클래스와 관련 유틸리티 함수들을 src/psola/ 디렉토리에 구현.",
+            "status": "pending",
+            "testStrategy": "알려진 피치의 합성 사인파 신호로 피치 검출 정확도 테스트, 실제 음성 파일의 수동 라벨링과 비교 검증"
+          },
+          {
+            "id": 2,
+            "title": "음성 단위 데이터베이스 구조 및 인덱싱 시스템 개발",
+            "description": "diphone/triphone 단위로 구성된 음성 데이터베이스의 저장, 검색, 인덱싱을 위한 효율적인 자료구조 구현",
+            "dependencies": [],
+            "details": "UnitDatabase 클래스 구현: 음소 정보, 피치, 길이, 음향 특성을 포함한 메타데이터와 실제 오디오 세그먼트 저장. B-tree 또는 해시맵 기반 빠른 검색 구조. 음성 단위의 음향적 특성(F0 평균, 스펙트럼 중심, 지속시간) 추출 및 저장. JSON 또는 바이너리 형식의 데이터베이스 파일 포맷 설계.",
+            "status": "pending",
+            "testStrategy": "다양한 크기의 데이터베이스로 검색 속도 벤치마크, 메모리 사용량 최적화 검증, 데이터 무결성 테스트"
+          },
+          {
+            "id": 3,
+            "title": "유닛 선택 비용 함수 및 UnitSelectionNode 구현",
+            "description": "목표 음향 파라미터와 데이터베이스 유닛 간의 최적 매칭을 위한 비용 함수 기반 유닛 선택 알고리즘 구현",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Target cost(목표 피치, 길이와의 차이)와 Join cost(인접 유닛 간 연결 비용) 계산. 다차원 거리 함수 구현: 피치 차이, 스펙트럼 거리, 길이 비율 등을 가중합으로 계산. Viterbi 디코딩 또는 A* 탐색으로 최적 유닛 시퀀스 선택. UnitSelectionNode 클래스에서 음소열과 목표 운율 정보를 받아 최적 유닛 목록 출력.",
+            "status": "pending",
+            "testStrategy": "동일 문장의 다른 운율 조건에서 유닛 선택 일관성 검증, 비용 함수 파라미터 튜닝을 통한 음질 개선 측정"
+          },
+          {
+            "id": 4,
+            "title": "PSOLA 시간축/주파수축 변형 엔진 구현",
+            "description": "선택된 음성 유닛들을 목표 피치와 지속시간에 맞춰 변형하는 PSOLA 기반 신호 처리 엔진 개발",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "TD-PSOLA(Time-Domain PSOLA) 구현: 피치 마크 기반 파형 세그먼트 추출, 목표 피치에 따른 세그먼트 간격 조정, 목표 지속시간에 따른 세그먼트 반복/제거. Overlap-Add 윈도우 함수 적용으로 자연스러운 연결. PsolaEngine 클래스에서 피치 스케일링, 시간 스케일링, 크로스페이딩 처리.",
+            "status": "pending",
+            "testStrategy": "다양한 피치/시간 변형률에서 합성 품질 평가, 아티팩트(glitch) 검출, 원본 대비 스펙트럼 왜곡 측정"
+          },
+          {
+            "id": 5,
+            "title": "PsolaSynthesisNode 통합 및 실시간 처리 최적화",
+            "description": "유닛 선택과 PSOLA 변형을 통합한 완전한 합성 노드 구현 및 실시간 처리를 위한 성능 최적화",
+            "dependencies": [
+              "5.3",
+              "5.4"
+            ],
+            "details": "PsolaSynthesisNode 클래스에서 UnitSelectionNode 결과를 받아 PSOLA 변형 후 최종 오디오 출력. 스트리밍 처리를 위한 버퍼링 및 청크 단위 처리. 멀티스레딩을 통한 유닛 선택과 파형 합성의 파이프라인 병렬화. 메모리 풀링과 캐싱으로 실시간 처리 성능 확보. 품질/속도 트레이드오프 조절 파라미터 제공.",
+            "status": "pending",
+            "testStrategy": "실시간 합성 지연시간 측정, CPU/메모리 사용률 프로파일링, 다양한 텍스트 길이에서 처리 속도 일관성 검증, 주관적 음질 평가"
+          }
+        ]
       },
       {
         "id": 6,
@@ -238,7 +346,65 @@
           3
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "LLSM2 알고리즘 논문 분석 및 수학적 모델링",
+            "description": "LLSM2 논문을 상세히 분석하여 조화성분과 잡음성분 분리 알고리즘, HNM 모델의 수학적 기반을 이해하고 구현 계획 수립",
+            "dependencies": [],
+            "details": "LLSM2 논문의 핵심 알고리즘 분석: 조화성분 추출을 위한 피치 추정 방법, 잡음성분 모델링을 위한 스펙트럼 분석, HNM 모델의 매개변수 추정 방법. 수학적 공식들을 C++ 구현 가능한 형태로 변환하고, 필요한 외부 라이브러리 (FFTW, Eigen 등) 조사. 알고리즘의 계산 복잡도 분석 및 실시간 처리 가능성 검토.",
+            "status": "pending",
+            "testStrategy": "논문의 예제 데이터를 통한 알고리즘 정확성 검증, 기준 구현체와의 결과 비교"
+          },
+          {
+            "id": 2,
+            "title": "조화성분 분석 및 추출 모듈 구현",
+            "description": "음성 신호에서 피치 추정을 통해 조화성분을 분리하고 분석하는 핵심 모듈 구현",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "HarmonicAnalyzer 클래스 구현: 자기상관함수 기반 피치 추정, 조화성분 추출을 위한 코움 필터링, 조화성분의 진폭과 위상 추정. STFT 기반 스펙트럼 분석과 조화성분 템플릿 매칭. 음성의 유성음/무성음 분류 및 조화성 정도 측정. 시간에 따른 피치 변화 추적 및 smoothing 알고리즘 적용.",
+            "status": "pending",
+            "testStrategy": "다양한 화자의 음성에 대한 피치 추정 정확도 측정, 조화성분 분리 품질 평가"
+          },
+          {
+            "id": 3,
+            "title": "잡음성분 모델링 및 스펙트럼 파라미터 생성",
+            "description": "조화성분을 제거한 잔여 신호에서 잡음성분을 모델링하고 스펙트럼 파라미터를 생성하는 모듈 구현",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "NoiseAnalyzer 클래스 구현: 조화성분 제거 후 잔여 신호 분석, 잡음성분의 스펙트럼 포락선 추정, LPC 분석을 통한 포르만트 추출. 스펙트럼 파라미터 벡터 생성 (멜 스케일 기반), 시간적 변화에 따른 파라미터 보간. 잡음성분의 에너지 분포 분석 및 주파수 대역별 모델링.",
+            "status": "pending",
+            "testStrategy": "잡음성분 모델링 정확도 검증, 재합성된 음성의 품질 평가"
+          },
+          {
+            "id": 4,
+            "title": "UTAU 파라미터 매핑 및 호환성 레이어 구현",
+            "description": "UTAU 스타일 파라미터를 LLSM2 내부 파라미터로 변환하는 매핑 시스템과 호환성 레이어 구현",
+            "dependencies": [
+              "6.2",
+              "6.3"
+            ],
+            "details": "UtauParameterMapper 클래스 구현: UTAU 음높이 파라미터를 LLSM2 피치 파라미터로 변환, 발음 길이를 시간축 스케일링 파라미터로 매핑, 음량을 진폭 파라미터로 변환. 기존 UTAU 보이스뱅크 메타데이터 파싱 및 LLSM2 파라미터 공간으로의 정규화. 파라미터 보간 및 smooth transition 처리.",
+            "status": "pending",
+            "testStrategy": "기존 UTAU 보이스뱅크와의 파라미터 변환 정확성 검증, 호환성 테스트"
+          },
+          {
+            "id": 5,
+            "title": "LlsmModelNode 통합 구현 및 최적화",
+            "description": "앞서 구현한 모든 모듈을 통합하여 LlsmModelNode를 완성하고 성능 최적화 수행",
+            "dependencies": [
+              "6.1",
+              "6.2",
+              "6.3",
+              "6.4"
+            ],
+            "details": "LlsmModelNode 클래스 완성: ISynthesisNode 인터페이스 구현, 조화성분/잡음성분 분석기 통합, 실시간 스펙트럼 파라미터 생성 파이프라인 구축. 메모리 풀 기반 버퍼 관리, 멀티스레딩을 통한 병렬 처리 최적화. 캐싱 메커니즘을 통한 반복 계산 최소화, SIMD 명령어를 활용한 벡터 연산 최적화.",
+            "status": "pending",
+            "testStrategy": "전체 시스템 통합 테스트, 실시간 처리 성능 벤치마크, 메모리 사용량 및 CPU 부하 측정"
+          }
+        ]
       },
       {
         "id": 7,
@@ -322,7 +488,61 @@
           2
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ONNX Runtime C++ 라이브러리 통합 및 기본 환경 설정",
+            "description": "ONNX Runtime C++ API를 프로젝트에 통합하고 GPU/CPU 백엔드 자동 선택 기능을 구현",
+            "dependencies": [],
+            "details": "CMakeLists.txt에 ONNX Runtime 의존성 추가, GPU 사용 가능 여부 자동 감지하여 ExecutionProvider 선택 (CUDA, DirectML, CPU), 초기화 및 정리 함수 구현, 런타임 버전 호환성 검증 로직 포함",
+            "status": "pending",
+            "testStrategy": "GPU/CPU 환경에서 ONNX Runtime 초기화 성공 여부 테스트, 메모리 누수 검증"
+          },
+          {
+            "id": 2,
+            "title": "텐서 데이터 타입 변환 및 메모리 관리 유틸리티 구현",
+            "description": "ONNX 텐서와 내부 데이터 구조 간 변환을 위한 유틸리티 클래스 구현",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "float32, int64, string 등 ONNX 지원 데이터 타입 변환 함수, DataPacket과 Ort::Value 간 상호 변환, 텐서 shape 검증 및 배치 처리를 위한 동적 크기 조정, 메모리 풀링을 통한 성능 최적화",
+            "status": "pending",
+            "testStrategy": "다양한 데이터 타입 변환 정확성 테스트, 대용량 텐서 처리 시 메모리 사용량 모니터링"
+          },
+          {
+            "id": 3,
+            "title": "OnnxInferenceNode 기본 구조 및 모델 로딩 구현",
+            "description": "ProcessorNode를 상속받는 OnnxInferenceNode 클래스 구현 및 동적 ONNX 모델 로딩 기능",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "ProcessorNode 인터페이스 구현, .onnx 파일 경로를 통한 동적 모델 로딩, 입력/출력 텐서 메타데이터 추출 및 검증, 모델별 세션 캐싱으로 재로딩 최적화, 스레드 안전성 보장",
+            "status": "pending",
+            "testStrategy": "다양한 ONNX 모델 로딩 테스트, 잘못된 모델 파일에 대한 에러 처리 검증"
+          },
+          {
+            "id": 4,
+            "title": "DiffSinger 아키텍처 분석 및 어쿠스틱/보코더 모델 지원",
+            "description": "DiffSinger의 어쿠스틱 모델과 보코더 모델을 위한 특화된 추론 파이프라인 구현",
+            "dependencies": [
+              "8.3"
+            ],
+            "details": "DiffSinger 입력 형식 분석 (음소 시퀀스, 피치, 듀레이션), 어쿠스틱 모델용 전처리 (음소→토큰 변환, 피치 정규화), 보코더 모델용 멜스펙트로그램 처리, 모델별 추론 설정 및 하이퍼파라미터 관리",
+            "status": "pending",
+            "testStrategy": "실제 DiffSinger 모델로 음소→멜스펙트로그램→파형 변환 테스트, 출력 품질 검증"
+          },
+          {
+            "id": 5,
+            "title": "배치 추론 및 스트리밍 추론 모드 구현",
+            "description": "실시간 스트리밍과 배치 처리를 모두 지원하는 추론 모드 구현",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "배치 추론: 전체 시퀀스를 한 번에 처리하여 최대 성능 달성, 스트리밍 추론: 청크 단위 실시간 처리로 지연시간 최소화, 상태 관리를 통한 연속적인 추론, 동적 배치 크기 조정 및 메모리 사용량 최적화",
+            "status": "pending",
+            "testStrategy": "실시간 추론 지연시간 측정, 배치 처리 throughput 벤치마크, 긴 시퀀스에서의 메모리 안정성 테스트"
+          }
+        ]
       },
       {
         "id": 9,
@@ -336,7 +556,63 @@
           8
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "C-ABI 공개 헤더 파일 설계 및 데이터 구조 정의",
+            "description": "PublicCApi.h 헤더 파일을 설계하고 C-ABI 호환 데이터 구조 정의",
+            "dependencies": [],
+            "details": "C 스타일 구조체로 노트 시퀀스, 가사, 발음 기호, 피치 커브, 컨트롤 파라미터를 표현하는 데이터 타입 정의. extern \"C\" 링키지 지정으로 C++ 네임 맹글링 방지, 플랫폼별 ABI 호환성 고려하여 패킹과 정렬 설정. 에러 코드 열거형과 상태 코드 정의, 콜백 함수 포인터 타입 정의.",
+            "status": "pending",
+            "testStrategy": "C, C++에서 헤더 파일 포함 테스트, 구조체 크기 및 정렬 검증"
+          },
+          {
+            "id": 2,
+            "title": "핵심 API 함수 인터페이스 구현",
+            "description": "초기화, 합성 요청, 리소스 해제 등 핵심 API 함수들 구현",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "voceversa_init(), voceversa_synthesize(), voceversa_cleanup() 등 핵심 함수 구현. 내부 C++ 객체와 C API 간 브리지 역할 수행, 예외 처리를 에러 코드로 변환. 스레드 안전성 보장을 위한 뮤텍스 적용, 글로벌 상태 관리 및 다중 인스턴스 지원.",
+            "status": "pending",
+            "testStrategy": "기본 합성 워크플로우 테스트, 메모리 누수 검사, 스레드 안전성 검증"
+          },
+          {
+            "id": 3,
+            "title": "비동기 처리 및 콜백 시스템 구현",
+            "description": "비동기 합성 처리와 진행률 모니터링을 위한 콜백 시스템 구현",
+            "dependencies": [
+              "9.2"
+            ],
+            "details": "voceversa_synthesize_async() 함수로 백그라운드 스레드에서 합성 수행. 진행률 콜백 (progress_callback), 완료 콜백 (completion_callback), 에러 콜백 (error_callback) 지원. 작업 취소 기능 (voceversa_cancel_synthesis) 및 작업 상태 조회 API 구현.",
+            "status": "pending",
+            "testStrategy": "장시간 합성 작업에서 콜백 동작 확인, 작업 취소 기능 테스트, 메모리 관리 검증"
+          },
+          {
+            "id": 4,
+            "title": "동적 라이브러리 빌드 설정 및 심볼 익스포트",
+            "description": "플랫폼별 동적 라이브러리 (.so, .dll, .dylib) 빌드 설정과 심볼 익스포트 구성",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3"
+            ],
+            "details": "CMakeLists.txt에 SHARED 라이브러리 타겟 추가, Windows에서 __declspec(dllexport) 매크로 정의, Linux/macOS에서 visibility 속성 설정. def 파일로 Windows DLL 심볼 명시적 익스포트, 버전 정보 및 메타데이터 임베딩. 정적 링킹 옵션도 함께 제공.",
+            "status": "pending",
+            "testStrategy": "각 플랫폼에서 동적 라이브러리 빌드 성공 확인, 심볼 익스포트 검증, 외부 프로그램에서 라이브러리 로딩 테스트"
+          },
+          {
+            "id": 5,
+            "title": "언어별 바인딩 예제 및 사용 가이드 작성",
+            "description": "Python, JavaScript, C# 등 주요 언어에서 API 사용 예제와 바인딩 가이드 작성",
+            "dependencies": [
+              "9.4"
+            ],
+            "details": "Python ctypes 바인딩 예제, Node.js ffi-napi 바인딩, C# P/Invoke 선언 예제 작성. 각 언어별 래퍼 클래스 구현으로 사용 편의성 향상, 에러 처리 및 메모리 관리 패턴 제시. examples/ 디렉토리에 실행 가능한 샘플 코드 배치.",
+            "status": "pending",
+            "testStrategy": "각 언어에서 바인딩 코드 실행 테스트, 메모리 관리 정확성 검증, 다양한 플랫폼에서 바인딩 동작 확인"
+          }
+        ]
       },
       {
         "id": 10,
@@ -350,7 +626,62 @@
           9
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "기본 GitHub Actions 워크플로우 설정 및 크로스플랫폼 빌드 매트릭스 구성",
+            "description": "GitHub Actions 워크플로우 파일을 생성하고 Windows, macOS, Ubuntu 플랫폼에 대한 빌드 매트릭스를 설정합니다.",
+            "dependencies": [],
+            "details": ".github/workflows/ci.yml 파일 생성. windows-latest, macos-latest, ubuntu-latest 매트릭스 설정. CMake 빌드 설정 및 컴파일러별 최적화 옵션 구성. 빌드 아티팩트 생성 및 업로드 설정. 병렬 빌드 최적화를 위한 cache 설정.",
+            "status": "pending",
+            "testStrategy": "각 플랫폼에서 워크플로우 실행 성공 확인, 빌드 아티팩트 생성 검증, 빌드 시간 측정"
+          },
+          {
+            "id": 2,
+            "title": "의존성 캐싱 및 단위 테스트 자동화 설정",
+            "description": "빌드 시간 단축을 위한 의존성 캐싱과 CTest를 통한 자동화된 단위 테스트 실행을 구성합니다.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "actions/cache를 사용한 CMake 빌드 캐시 및 패키지 관리자 캐시 설정. CTest 실행을 위한 워크플로우 단계 추가. 테스트 결과 리포팅을 위한 actions/upload-artifact 설정. 테스트 실패 시 로그 수집 및 알림 설정.",
+            "status": "pending",
+            "testStrategy": "캐시 적중률 확인, 테스트 실행 시간 측정, 테스트 결과 리포트 검증"
+          },
+          {
+            "id": 3,
+            "title": "코드 커버리지 측정 및 품질 검사 도구 통합",
+            "description": "gcov/lcov를 통한 코드 커버리지 측정과 clang-format, cppcheck 등 코드 품질 검사 도구를 통합합니다.",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "gcov를 통한 커버리지 데이터 수집 설정. lcov를 사용한 HTML 커버리지 리포트 생성. clang-format을 통한 코드 스타일 검사. cppcheck를 통한 정적 분석. Codecov 또는 Coveralls 연동으로 커버리지 리포팅.",
+            "status": "pending",
+            "testStrategy": "커버리지 리포트 생성 확인, 코드 품질 검사 통과 여부 검증, 품질 메트릭 임계값 설정"
+          },
+          {
+            "id": 4,
+            "title": "Android NDK 및 iOS 빌드 설정",
+            "description": "Android NDK를 통한 안드로이드 빌드와 Xcode를 통한 iOS 빌드 자동화를 설정합니다.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Android NDK 설치 및 CMake 툴체인 파일 설정. android.yml 워크플로우 생성으로 ARM64/x86_64 아키텍처 지원. iOS용 Xcode 프로젝트 생성을 위한 CMake 설정. macOS runner에서 iOS 시뮬레이터 및 디바이스 빌드 설정. 플랫폼별 서명 및 패키징 설정.",
+            "status": "pending",
+            "testStrategy": "안드로이드 APK 생성 확인, iOS 앱 빌드 성공 검증, 다양한 아키텍처별 바이너리 검증"
+          },
+          {
+            "id": 5,
+            "title": "자동 버저닝, 라이선스 검증 및 릴리스 배포 설정",
+            "description": "시맨틱 버저닝을 통한 자동 태깅, 라이선스 준수 검증, GitHub Releases를 통한 자동 배포를 설정합니다.",
+            "dependencies": [
+              "10.3",
+              "10.4"
+            ],
+            "details": "semantic-release 또는 GitVersion을 통한 자동 버전 관리. 라이선스 헤더 검증 스크립트 작성 및 CI 통합. GitHub Releases API를 통한 릴리스 노트 자동 생성. 플랫폼별 바이너리 및 라이브러리 패키징. 릴리스 브랜치 보호 규칙 및 승인 워크플로우 설정.",
+            "status": "pending",
+            "testStrategy": "버전 태깅 자동화 검증, 라이선스 규정 준수 확인, 릴리스 아티팩트 다운로드 및 실행 테스트"
+          }
+        ]
       }
     ],
     "metadata": {

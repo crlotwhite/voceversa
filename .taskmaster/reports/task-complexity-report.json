@@ -1,0 +1,21 @@
+{
+	"meta": {
+		"generatedAt": "2025-08-09T13:08:32.702Z",
+		"tasksAnalyzed": 1,
+		"totalTasks": 10,
+		"analysisCount": 1,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 2,
+			"taskTitle": "코어 인터페이스 및 데이터 구조 설계",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "현재 기본 CMake 구조만 있는 상황에서 코어 아키텍처를 처음부터 설계해야 합니다. 각 서브태스크는 다른 서브태스크들의 기반이 되므로 신중한 인터페이스 설계가 필요합니다. ISynthesisNode는 모든 합성 노드의 추상 기반이 되므로 확장 가능하고 타입 안전한 인터페이스 설계가 중요합니다. DataPacket은 시스템 전반에서 사용되는 핵심 데이터 구조로 성능과 메모리 안전성을 고려한 설계가 필요합니다. ComputationGraph는 복잡한 병렬 처리 로직과 의존성 관리를 포함하므로 스레드 안전성과 효율적인 스케줄링이 핵심입니다.",
+			"reasoning": "프로젝트가 초기 단계로 아직 핵심 구조가 없어 모든 것을 처음부터 설계해야 합니다. 5개의 서브태스크는 상호 의존적이며 각각이 시스템 아키텍처의 핵심 부분을 담당합니다. 특히 ComputationGraph의 병렬 처리 구현은 복잡한 멀티스레딩 로직을 요구하며, 모든 컴포넌트가 다른 태스크들의 기반이 되는 중요한 역할을 합니다."
+		}
+	]
+}

@@ -19,6 +19,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Define VCPKG_ROOT (Unix)
+        if: runner.os != 'Windows'
+        run: echo "VCPKG_ROOT=${{ runner.temp }}/vcpkg" >> $GITHUB_ENV
+
+      - name: Define VCPKG_ROOT (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          echo VCPKG_ROOT=%RUNNER_TEMP%\vcpkg>>%GITHUB_ENV%
+
+      - name: Bootstrap vcpkg (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+          "$VCPKG_ROOT"/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_ROOT%
+          %VCPKG_ROOT%\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/vcpkg/installed
+            ${{ runner.temp }}/vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json', '**/vcpkg-lock.json') }}
+
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
 
@@ -26,13 +57,14 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x ./scripts/build.sh
 
-      - name: Build & Test (Unix)
+      - name: Build & Test (Unix with vcpkg)
         if: runner.os != 'Windows'
         run: |
-          ./scripts/build.sh debug
+          # Use vcpkg-aware preset so dependencies resolve from vcpkg manifest
+          ./scripts/build.sh debug-vcpkg
 
-      - name: Build & Test (Windows)
+      - name: Build & Test (Windows with vcpkg)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          scripts\build.bat debug-vs
+          scripts\build.bat debug-vs-vcpkg

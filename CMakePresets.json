@@ -14,6 +14,15 @@
       }
     },
     {
+      "name": "debug-vcpkg",
+      "displayName": "Debug (vcpkg)",
+      "description": "Debug build using vcpkg toolchain (manifest mode)",
+      "inherits": "debug",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
       "name": "release",
       "displayName": "Release",
       "description": "Release build",
@@ -25,25 +34,55 @@
       }
     },
     {
+      "name": "release-vcpkg",
+      "displayName": "Release (vcpkg)",
+      "description": "Release build using vcpkg toolchain (manifest mode)",
+      "inherits": "release",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
       "name": "debug-vs",
       "displayName": "Debug (VS)",
       "description": "Debug build using Visual Studio generator",
       "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64"
+      },
       "binaryDir": "${sourceDir}/build/vs-debug",
       "cacheVariables": {
         "CMAKE_CONFIGURATION_TYPES": "Debug",
         "BUILD_TESTING": "ON"
       }
+    },
+    {
+      "name": "debug-vs-vcpkg",
+      "displayName": "Debug (VS + vcpkg)",
+      "description": "Debug build using Visual Studio and vcpkg toolchain",
+      "inherits": "debug-vs",
+      "architecture": {
+        "value": "x64"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
     }
   ],
   "buildPresets": [
   { "name": "debug", "configurePreset": "debug" },
+  { "name": "debug-vcpkg", "configurePreset": "debug-vcpkg" },
   { "name": "release", "configurePreset": "release" },
-  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" }
+  { "name": "release-vcpkg", "configurePreset": "release-vcpkg" },
+  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" },
+  { "name": "debug-vs-vcpkg", "configurePreset": "debug-vs-vcpkg", "configuration": "Debug" }
   ],
   "testPresets": [
   { "name": "debug", "configurePreset": "debug" },
+  { "name": "debug-vcpkg", "configurePreset": "debug-vcpkg" },
   { "name": "release", "configurePreset": "release" },
-  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" }
+  { "name": "release-vcpkg", "configurePreset": "release-vcpkg" },
+  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" },
+  { "name": "debug-vs-vcpkg", "configurePreset": "debug-vs-vcpkg", "configuration": "Debug" }
   ]
 }

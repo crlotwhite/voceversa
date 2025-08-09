@@ -50,11 +50,15 @@ target_compile_features(voceversa_app PRIVATE cxx_std_17)
 
 if(VOCEVERSA_FMT_TARGET)
   target_link_libraries(voceversa_app PRIVATE ${VOCEVERSA_FMT_TARGET})
+  target_compile_definitions(voceversa_app PRIVATE VOCEVERSA_HAS_FMT=1)
+else()
+  target_compile_definitions(voceversa_app PRIVATE VOCEVERSA_HAS_FMT=0)
 endif()
 
 include(CTest)
 if(BUILD_TESTING)
   enable_testing()
   add_test(NAME hello COMMAND voceversa_app)
-  set_tests_properties(hello PROPERTIES PASS_REGULAR_EXPRESSION "Hello, Voceversa!")
+  # Accept both messages (with or without fmt) to validate dependency presence transparently
+  set_tests_properties(hello PROPERTIES PASS_REGULAR_EXPRESSION "Hello, Voceversa( with fmt)?!")
 endif()
