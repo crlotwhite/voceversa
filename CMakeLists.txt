@@ -67,6 +67,7 @@ add_library(voceversa_core
   src/world/WorldAnalysisNode.cpp
   src/world/WorldSynthesisNode.cpp
   src/world/UtauWorldInterface.cpp
+  src/utils/WavIO.cpp
 )
 target_include_directories(voceversa_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(voceversa_core PUBLIC cxx_std_17)

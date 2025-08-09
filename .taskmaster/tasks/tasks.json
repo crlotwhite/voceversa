@@ -210,15 +210,15 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "WAV 파일 헤더 파싱 및 생성 유틸리티 구현",
             "description": "WAV 파일의 RIFF 헤더 구조를 파싱하고 생성하는 기본 유틸리티 함수들을 구현합니다. 다양한 비트 깊이와 샘플레이트를 지원하는 헤더 구조체를 정의합니다.",
             "dependencies": [],
-            "details": "WavHeader 구조체 정의 (RIFF, WAVE, fmt, data 청크), 엔디안 변환 함수, 헤더 유효성 검증, 16-bit/24-bit/32-bit float PCM 포맷 지원. include/audio/wav_io.h와 src/audio/wav_io.cpp 파일 생성. 플랫폼별 바이트 순서 처리를 위한 매크로 정의.",
-            "status": "pending",
+            "details": "WavHeader 구조체 정의 (RIFF, WAVE, fmt, data 청크), 엔디안 변환 함수, 헤더 유효성 검증, 16-bit/24-bit/32-bit float PCM 포맷 지원. include/audio/wav_io.h와 src/audio/wav_io.cpp 파일 생성. 플랫폼별 바이트 순서 처리를 위한 매크로 정의.\n<info added on 2025-08-09T18:00:28.006Z>\nWAV 헤더 관련 구조체는 `RiffHeader`, `ChunkHeader`, `FmtPCM`, `WavInfo`, `WavData`로 구체화되었으며, `WavReader` 및 `WavWriter` 클래스가 각각 open/rewind/readFrames/readAll/info, open/writeFrames/close 메서드와 함께 구현되었습니다. 지원 포맷은 PCM16, PCM24(3바이트 sign-extend), IEEE Float32이며, 엔디안은 WAV 표준에 따라 리틀엔디안을 가정하고 타겟 플랫폼(리눅스/x86)에 맞춰 추가 변환은 미적용됩니다. 헤더 유효성 검증은 청크 검증과 함께 사이즈 추적을 포함하며, `WavWriter`는 `close` 시 RIFF 및 data 청크 사이즈를 패치합니다. 모든 읽기 작업(`readAll`/`readFrames`) 결과는 `float(-1..1)` 범위로 변환됩니다. 파일 경로는 `include/utils/WavIO.h`와 `src/utils/WavIO.cpp`로 변경되었습니다.\n</info added on 2025-08-09T18:00:28.006Z>",
+            "status": "done",
             "testStrategy": "다양한 포맷의 WAV 파일 헤더 파싱 테스트, 잘못된 헤더에 대한 에러 처리 검증"
           },
           {
@@ -228,8 +228,8 @@
             "dependencies": [
               "4.1"
             ],
-            "details": "WavReader 클래스 구현, 파일 스트림 처리, 청크별 데이터 읽기, 샘플 포맷 변환 (int16 → float, int24 → float, float32), 스테레오/모노 채널 처리. 대용량 파일을 위한 스트리밍 읽기 지원. 메모리 효율적인 버퍼 관리.",
-            "status": "pending",
+            "details": "WavReader 클래스 구현, 파일 스트림 처리, 청크별 데이터 읽기, 샘플 포맷 변환 (int16 → float, int24 → float, float32), 스테레오/모노 채널 처리. 대용량 파일을 위한 스트리밍 읽기 지원. 메모리 효율적인 버퍼 관리.\n<info added on 2025-08-09T18:06:44.598Z>\n추가적으로, `readAll` 및 `readFrames` 메서드를 통한 전체/스트리밍 읽기 지원이 구현되었으며, `int24` 포맷은 자체 변환 로직을 사용하고 `float32` 포맷은 클램핑하여 변환됩니다. 채널 데이터는 인터리브 형식을 유지하며 `channels` 필드를 반영합니다. 또한, `tests/test_core.cpp`에 16-bit 라운드트립 간이 검증 로직이 추가되었습니다.\n</info added on 2025-08-09T18:06:44.598Z>",
+            "status": "done",
             "testStrategy": "표준 WAV 파일들로 읽기 정확성 테스트, 메모리 사용량 모니터링, 대용량 파일 스트리밍 테스트"
           },
           {
@@ -239,8 +239,8 @@
             "dependencies": [
               "4.1"
             ],
-            "details": "WavWriter 클래스 구현, 헤더 생성 및 쓰기, 오디오 데이터 포맷 변환 (float → int16/int24/float32), 파일 크기 계산 및 헤더 업데이트. 실시간 쓰기를 위한 버퍼링 지원. 파일 무결성 보장을 위한 예외 처리.",
-            "status": "pending",
+            "details": "WavWriter 클래스 구현, 헤더 생성 및 쓰기, 오디오 데이터 포맷 변환 (float → int16/int24/float32), 파일 크기 계산 및 헤더 업데이트. 실시간 쓰기를 위한 버퍼링 지원. 파일 무결성 보장을 위한 예외 처리.\n<info added on 2025-08-09T18:18:52.484Z>\n, WavWriter 클래스는 `open()`, `writeFrames()`, `close()` 메서드를 포함하며, 32-float는 IEEE_FLOAT 포맷으로 지원한다. 정수 PCM 경로에서는 `peakNormalize` 옵션을 통한 스케일링 후 양자화를 수행한다. 24비트 데이터는 3바이트 little-endian으로 작성하며, `close()` 메서드에서 data size와 RIFF size를 패치하여 헤더를 업데이트한다. 편의 함수 `writeWav16` 및 `writeWav32f`를 추가하고 (기존 `writeWav16` 호환 유지), CMake에서 `src/utils/WavIO.cpp`를 `voceversa_core`에 링크한다.\n</info added on 2025-08-09T18:18:52.484Z>",
+            "status": "done",
             "testStrategy": "생성된 WAV 파일의 다른 소프트웨어 호환성 테스트, 포맷별 출력 품질 검증"
           },
           {
@@ -251,8 +251,8 @@
               "4.2",
               "4.3"
             ],
-            "details": "AudioBuffer 클래스 (멀티채널 지원, 샘플 인덱싱, 메모리 관리), 스테레오↔모노 변환, 선형/큐빅 보간 리샘플링, 게인 조절, 믹싱 기능. 템플릿 기반으로 float/double 정밀도 지원. SIMD 최적화 고려사항 포함.",
-            "status": "pending",
+            "details": "AudioBuffer 클래스 (멀티채널 지원, 샘플 인덱싱, 메모리 관리), 스테레오↔모노 변환, 선형/큐빅 보간 리샘플링, 게인 조절, 믹싱 기능. 템플릿 기반으로 float/double 정밀도 지원. SIMD 최적화 고려사항 포함.\n<info added on 2025-08-09T18:20:11.618Z>\nAudioBuffer<T>는 header-only로 include/utils/AudioBuffer.h에 구현되며, 멀티채널 인터리브 버퍼를 지원합니다. SignalUtils 클래스는 include/utils/SignalUtils.h에 구현되어 Hanning/Hamming/Blackman 윈도우 생성 및 resampleLinear 함수를 통한 선형 리샘플링 기능을 제공합니다. 기본 정밀도는 float입니다. test_core.cpp에 윈도우 함수 및 간단한 기능 검증 테스트가 추가됩니다.\n</info added on 2025-08-09T18:20:11.618Z>",
+            "status": "done",
             "testStrategy": "신호 변환 정확성 검증, 리샘플링 품질 테스트, 메모리 누수 검사"
           },
           {
@@ -262,8 +262,8 @@
             "dependencies": [
               "4.4"
             ],
-            "details": "WindowFunction 클래스로 다양한 윈도우 타입 지원, FFTW3 또는 KissFFT 라이브러리 통합, FFTWrapper 클래스로 forward/inverse 변환, 복소수 데이터 처리, 제로 패딩 및 윈도우 적용 자동화. 실시간 처리를 위한 STFT 기능 포함.",
-            "status": "pending",
+            "details": "WindowFunction 클래스로 다양한 윈도우 타입 지원, FFTW3 또는 KissFFT 라이브러리 통합, FFTWrapper 클래스로 forward/inverse 변환, 복소수 데이터 처리, 제로 패딩 및 윈도우 적용 자동화. 실시간 처리를 위한 STFT 기능 포함.\n<info added on 2025-08-09T18:20:32.542Z>\nWindow 함수 (Hanning, Hamming, Blackman)가 SignalUtils에 구현되었습니다. FFTWrapper (include/utils/FFTWrapper.h)는 radix-2 Cooley-Tukey 알고리즘을 사용하여 power-of-two 크기만 지원하며, fft/ifft 가역성 테스트가 추가되었습니다. 향후 FFTW/KissFFT 라이브러리로의 교체가 용이하도록 래퍼 형태가 유지되었습니다.\n</info added on 2025-08-09T18:20:32.542Z>",
+            "status": "done",
             "testStrategy": "윈도우 함수 수학적 정확성 검증, FFT 변환 결과 검증, 성능 벤치마크"
           }
         ]
@@ -417,7 +417,7 @@
           5,
           6
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -697,7 +697,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T11:30:33.895Z",
-      "updated": "2025-08-09T16:23:04.214Z",
+      "updated": "2025-08-09T18:44:01.213Z",
       "description": "Tasks for master context"
     }
   }

@@ -9,6 +9,9 @@
 #include "core/ComputationGraph.h"
 #include "core/IPlatformIO.h"
 #include "core/ISynthesisNode.h"
+#include "utils/WavIO.h"
+#include "utils/SignalUtils.h"
+#include "utils/FFTWrapper.h"
 
 using namespace vv;
 
@@ -66,5 +69,33 @@ int main() {
     }
 
     std::cout << "core tests passed\n";
+
+    // Basic WAV roundtrip (16-bit)
+    {
+        vv::wavio::WavData wd; wd.sampleRate = 48000; wd.channels = 1; wd.samples = {0.0f, 0.5f, -0.5f, 1.0f, -1.0f};
+        assert(vv::wavio::writeWav16("/tmp/vv_test16.wav", wd));
+        vv::wavio::WavData rd; assert(vv::wavio::readWav("/tmp/vv_test16.wav", rd));
+        assert(rd.sampleRate == wd.sampleRate && rd.channels == wd.channels && rd.samples.size() == wd.samples.size());
+    }
+
+    // Window functions size check and energy sanity
+    {
+        std::vector<float> w(128);
+        vv::signal::hanning(w); float sum1=0; for (auto v: w) sum1+=v; assert(sum1>0);
+        vv::signal::hamming(w); float sum2=0; for (auto v: w) sum2+=v; assert(sum2>0);
+        vv::signal::blackman(w); float sum3=0; for (auto v: w) sum3+=v; assert(sum3>0);
+    }
+
+    // FFT invertibility
+    {
+        const size_t N = 256;
+        std::vector<std::complex<float>> x(N);
+    const float PI = 3.14159265358979323846f;
+    for (size_t n=0;n<N;++n) x[n] = std::complex<float>(std::sin(2*PI*n/N), 0.0f);
+        auto X = x; vv::fft::FFTWrapper::fft(X); vv::fft::FFTWrapper::ifft(X);
+        for (size_t n=0;n<N;++n) assert(std::abs(X[n].real() - x[n].real()) < 1e-3f);
+    }
+
+    std::cout << "audio utils tests passed\n";
     return 0;
 }
