@@ -8,6 +8,7 @@ project(voceversa
 option(VOCEVERSA_USE_FMT "Use fmt library if available (via vcpkg/conan or fallback stub)" ON)
 option(VOCEVERSA_ENABLE_WARNINGS "Enable compiler warnings" ON)
 option(VOCEVERSA_ENABLE_LTO "Enable link time optimization in Release" OFF)
+option(VOCEVERSA_USE_WORLD "Use mmorise/WORLD for analysis & synthesis (via find_package or FetchContent)" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -65,6 +66,7 @@ add_library(voceversa_core
   src/world/D4C.cpp
   src/world/WorldAnalysisNode.cpp
   src/world/WorldSynthesisNode.cpp
+  src/world/UtauWorldInterface.cpp
 )
 target_include_directories(voceversa_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(voceversa_core PUBLIC cxx_std_17)
@@ -73,6 +75,33 @@ if(VOCEVERSA_FMT_TARGET)
   target_compile_definitions(voceversa_core PUBLIC VOCEVERSA_HAS_FMT=1)
 else()
   target_compile_definitions(voceversa_core PUBLIC VOCEVERSA_HAS_FMT=0)
+endif()
+
+# Optional: WORLD integration
+if(VOCEVERSA_USE_WORLD)
+  # Try to find a pre-installed world package (e.g., via vcpkg or system)
+  find_package(world CONFIG QUIET)
+  if(NOT world_FOUND)
+    include(FetchContent)
+    # Fetch the official WORLD repo; if the network is unavailable, this block will be skipped gracefully
+    FetchContent_Declare(
+      world
+      GIT_REPOSITORY https://github.com/mmorise/World.git
+      GIT_TAG master
+    )
+    # Protect from CMake versions that error on failed fetch; allow continue without WORLD
+    set(FETCHCONTENT_QUIET OFF)
+    FetchContent_MakeAvailable(world)
+  endif()
+
+  if(TARGET world)
+    target_link_libraries(voceversa_core PUBLIC world)
+    target_compile_definitions(voceversa_core PUBLIC VV_USE_WORLD=1)
+    target_include_directories(voceversa_core PUBLIC $<TARGET_PROPERTY:world,INCLUDE_DIRECTORIES>)
+    message(STATUS "VOCEVERSA: WORLD integration enabled")
+  else()
+    message(WARNING "VOCEVERSA: WORLD library not found/fetched; falling back to placeholder algorithms.")
+  endif()
 endif()
 
 if(BUILD_TESTING)
@@ -96,3 +125,9 @@ if(BUILD_TESTING)
   target_include_directories(world_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
   add_test(NAME world_tests COMMAND world_tests)
 endif()
+
+# Simple CLI tool for UTAU-friendly WORLD IO (demo)
+add_executable(vv_world src/tools/vv_world.cpp)
+target_link_libraries(vv_world PRIVATE voceversa_core)
+target_sources(vv_world PRIVATE src/utils/WavIO.cpp)
+target_include_directories(vv_world PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -1,6 +1,11 @@
 #include "world/WorldSynthesisNode.h"
 #include <algorithm>
 #include <cmath>
+#ifdef VV_USE_WORLD
+extern "C" {
+#include <world/synthesis.h>
+}
+#endif
 
 namespace vv {
 
@@ -13,8 +18,44 @@ std::shared_ptr<DataPacket> WorldSynthesisNode::process(const std::shared_ptr<co
     auto out = std::make_shared<DataPacket>(std::vector<float>{}, input->sampleRate(), input->channels(), input->bitDepth());
     const auto* f0 = input->getFeature("f0");
     if (!f0 || f0->empty()) return out;
-    // Synthesize 1 frame per f0 hop, 10ms per hop as placeholder
     const uint32_t sr = input->sampleRate();
+
+#ifdef VV_USE_WORLD
+    // Attempt WORLD resynthesis if we have spectral envelopes and aperiodicity
+    const auto* env = input->getFeature("spectral_envelope");
+    const auto* ap = input->getFeature("aperiodicity");
+    const int f0_length = static_cast<int>(input->getScalar("world_f0_len", 0.0));
+    const int fft_size = static_cast<int>(input->getScalar("world_fft_size", 0.0));
+    const int bins = static_cast<int>(input->getScalar("world_bins", 0.0));
+    if (env && ap && f0_length > 0 && bins > 0 && fft_size > 0 && static_cast<int>(f0->size()) == f0_length && static_cast<int>(env->size()) == f0_length * bins && static_cast<int>(ap->size()) == f0_length * bins) {
+        std::vector<double> f0_d(f0->begin(), f0->end());
+        std::vector<double> time_axis(f0_length);
+        // Use frame period from f0 spacing: assume constant; default to 5 ms
+        double frame_period_ms = 5.0;
+        if (f0_length > 1) {
+            frame_period_ms = 1000.0 * input->getScalar("world_hop_size", static_cast<double>(sr / 200.0)) / static_cast<double>(sr);
+        }
+        for (int i = 0; i < f0_length; ++i) time_axis[i] = i * frame_period_ms / 1000.0;
+        // Rebuild matrices
+        std::vector<const double*> spec_rows(f0_length);
+        std::vector<const double*> ap_rows(f0_length);
+        std::vector<double> spec_d(env->begin(), env->end());
+        std::vector<double> ap_d(ap->begin(), ap->end());
+        for (int t = 0; t < f0_length; ++t) {
+            spec_rows[t] = spec_d.data() + static_cast<size_t>(t) * bins;
+            ap_rows[t] = ap_d.data() + static_cast<size_t>(t) * bins;
+        }
+        // Output length
+    int y_length = static_cast<int>(std::ceil((f0_length * frame_period_ms / 1000.0) * static_cast<double>(sr)));
+        std::vector<double> y(y_length);
+        Synthesis(f0_d.data(), f0_length, spec_rows.data(), ap_rows.data(), fft_size, frame_period_ms, sr, y_length, y.data());
+        out->samples().reserve(y.size());
+        for (double v : y) out->samples().push_back(static_cast<float>(v));
+        return out;
+    }
+#endif
+
+    // Fallback: Synthesize 1 frame per f0 hop, 10ms per hop as placeholder
     const size_t hopSamples = static_cast<size_t>(0.01 * sr);
     float phase = 0.0f;
     for (float f : *f0) {
@@ -22,7 +63,7 @@ std::shared_ptr<DataPacket> WorldSynthesisNode::process(const std::shared_ptr<co
         for (size_t n = 0; n < N; ++n) {
             float omega = 2.0f * 3.1415926535f * (f > 0.0f ? f : 100.0f) / static_cast<float>(sr);
             phase += omega;
-            out->samples().push_back(std::sin(phase) * 0.1f); // quiet tone
+            out->samples().push_back(std::sin(phase) * 0.1f);
         }
     }
     return out;
