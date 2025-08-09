@@ -9,7 +9,7 @@
         "testStrategy": "각 플랫폼에서 빌드 성공 확인, 기본 헬로월드 프로그램 컴파일 및 실행 테스트",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -17,7 +17,7 @@
             "description": "표준적인 C++ 프로젝트를 위한 디렉토리 구조를 생성하고 코드 구성의 기반을 마련",
             "dependencies": [],
             "details": "src/, include/, tests/, examples/, external/, build/, docs/ 디렉토리 생성. 각 디렉토리에 필요한 .gitkeep 파일 또는 기본 README.md 파일 생성. 프로젝트 루트에 .gitignore 파일 생성하여 빌드 아티팩트, 임시 파일 등 제외 설정. LICENSE 파일 및 기본 README.md 작성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "디렉토리 구조가 올바르게 생성되었는지 확인, git 저장소에 올바르게 추가되는지 검증"
           },
           {
@@ -28,7 +28,7 @@
               "1.1"
             ],
             "details": "루트 CMakeLists.txt에서 cmake_minimum_required 3.16 이상 설정, PROJECT() 명령으로 프로젝트 정의, C++17 표준 설정 (set(CMAKE_CXX_STANDARD 17), set(CMAKE_CXX_STANDARD_REQUIRED ON)). 컴파일러별 최적화 플래그 및 경고 설정 (-Wall, -Wextra for GCC/Clang, /W3 for MSVC). 플랫폼별 조건부 컴파일 설정 추가.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Windows, macOS, Linux에서 cmake 명령 실행 성공 확인, C++17 기능이 정상 컴파일되는지 테스트"
           },
           {
@@ -39,7 +39,7 @@
               "1.2"
             ],
             "details": "vcpkg.json 또는 conanfile.txt 작성하여 필요한 라이브러리 목록 정의. CMake에서 find_package() 명령을 통한 라이브러리 검색 및 링크 설정. 향후 필요할 ONNX Runtime, 오디오 처리 라이브러리(libsndfile) 등의 의존성 설정 준비. 플랫폼별 라이브러리 경로 설정 및 정적/동적 링크 옵션 구성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "의존성 관리 도구가 정상 작동하는지 확인, 기본 라이브러리 하나 이상 성공적으로 링크되는지 테스트"
           },
           {
@@ -51,7 +51,7 @@
               "1.3"
             ],
             "details": "각 플랫폼별 build.sh/build.bat 스크립트 작성. CMakePresets.json을 활용한 플랫폼별 빌드 구성 사전 정의. 컴파일러별 최적화 옵션 (-O2, -O3) 및 디버그 정보 설정. 정적 분석 도구 (clang-tidy, cppcheck) 통합 설정. Release/Debug 빌드 타입별 설정 차별화.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "각 플랫폼에서 빌드 스크립트 실행 성공 확인, Release/Debug 모드 모두 정상 빌드되는지 검증"
           },
           {
@@ -63,7 +63,7 @@
               "1.4"
             ],
             "details": "src/main.cpp에 간단한 Hello World 프로그램 작성. CMakeLists.txt에 실행 파일 타겟 추가 (add_executable). include/ 디렉토리의 헤더 파일 포함 설정. 컴파일, 링크, 실행이 모든 플랫폼에서 성공하는지 확인하는 기본 테스트 케이스 작성. 향후 라이브러리 구조를 고려한 기본 헤더 파일 구조 설계.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "모든 지원 플랫폼에서 Hello World 프로그램 컴파일 및 실행 성공 확인, 출력 결과 정확성 검증"
           }
         ]
@@ -355,7 +355,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T11:30:33.895Z",
-      "updated": "2025-08-09T11:30:33.895Z",
+      "updated": "2025-08-09T11:57:04.614Z",
       "description": "Tasks for master context"
     }
   }
