@@ -37,13 +37,13 @@
     }
   ],
   "buildPresets": [
-    { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" },
-    { "name": "debug-vs", "configurePreset": "debug-vs" }
+  { "name": "debug", "configurePreset": "debug" },
+  { "name": "release", "configurePreset": "release" },
+  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" }
   ],
   "testPresets": [
-    { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" },
-    { "name": "debug-vs", "configurePreset": "debug-vs" }
+  { "name": "debug", "configurePreset": "debug" },
+  { "name": "release", "configurePreset": "release" },
+  { "name": "debug-vs", "configurePreset": "debug-vs", "configuration": "Debug" }
   ]
 }
