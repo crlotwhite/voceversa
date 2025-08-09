@@ -56,9 +56,31 @@ else()
 endif()
 
 include(CTest)
+
+# Core library (interfaces + platform implementation)
+add_library(voceversa_core
+  src/platform/LinuxPlatformIO.cpp
+)
+target_include_directories(voceversa_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features(voceversa_core PUBLIC cxx_std_17)
+if(VOCEVERSA_FMT_TARGET)
+  target_link_libraries(voceversa_core PUBLIC ${VOCEVERSA_FMT_TARGET})
+  target_compile_definitions(voceversa_core PUBLIC VOCEVERSA_HAS_FMT=1)
+else()
+  target_compile_definitions(voceversa_core PUBLIC VOCEVERSA_HAS_FMT=0)
+endif()
+
 if(BUILD_TESTING)
   enable_testing()
   add_test(NAME hello COMMAND voceversa_app)
   # Accept both messages (with or without fmt) to validate dependency presence transparently
   set_tests_properties(hello PROPERTIES PASS_REGULAR_EXPRESSION "Hello, Voceversa( with fmt)?!")
+
+  # Unit tests for core
+  add_executable(core_tests
+    tests/test_core.cpp
+  )
+  target_link_libraries(core_tests PRIVATE voceversa_core)
+  target_include_directories(core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  add_test(NAME core_tests COMMAND core_tests)
 endif()

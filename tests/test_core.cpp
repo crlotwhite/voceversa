@@ -1,0 +1,70 @@
+#include <cassert>
+#include <iostream>
+#include <cmath>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "core/DataPacket.h"
+#include "core/ComputationGraph.h"
+#include "core/IPlatformIO.h"
+#include "core/ISynthesisNode.h"
+
+using namespace vv;
+
+// A simple mock node that copies input and scales samples
+class GainNode : public ISynthesisNode {
+public:
+    explicit GainNode(float g, std::string id) : gain_(g) { setId(std::move(id)); setName("Gain"); }
+    bool initialize() override { return true; }
+    std::shared_ptr<DataPacket> process(const std::shared_ptr<const DataPacket>& input) override {
+        auto out = std::make_shared<DataPacket>(*input);
+        for (auto& s : out->samples()) s *= gain_;
+        return out;
+    }
+    std::vector<std::string> getInputs() const override { return {"in"}; }
+    std::vector<std::string> getOutputs() const override { return {"out"}; }
+private:
+    float gain_;
+};
+
+int main() {
+    // DataPacket basic behavior
+    std::vector<float> samples = {0.5f, -0.5f, 1.0f};
+    DataPacket pkt(samples, 48000, 1, 32);
+    assert(pkt.samples().size() == samples.size());
+
+    // PlatformIO
+    auto io = makePlatformIO();
+    auto mem = io->allocateMemory(1024);
+    assert(mem.ptr != nullptr && mem.size == 1024);
+    io->deallocateMemory(mem);
+    assert(mem.size == 0);
+
+    // Graph topology and processing order
+    ComputationGraph g;
+    auto n1 = std::make_shared<GainNode>(2.0f, "n1");
+    auto n2 = std::make_shared<GainNode>(0.5f, "n2");
+    assert(g.addNode(n1));
+    assert(g.addNode(n2));
+    assert(g.connectNodes("n1", "n2"));
+
+    auto order = g.topologicalOrder();
+    // n1 should come before n2
+    assert(order.size() == 2);
+    auto it1 = std::find(order.begin(), order.end(), "n1");
+    auto it2 = std::find(order.begin(), order.end(), "n2");
+    assert(it1 < it2);
+
+    // Process via mock nodes
+    auto in = std::make_shared<DataPacket>(samples);
+    auto out1 = n1->process(in);
+    auto out2 = n2->process(out1);
+    // overall gain 2.0 * 0.5 = 1.0 -> expect equality to input
+    for (size_t i = 0; i < samples.size(); ++i) {
+        assert(std::abs(out2->samples()[i] - samples[i]) < 1e-6f);
+    }
+
+    std::cout << "core tests passed\n";
+    return 0;
+}
