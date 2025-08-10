@@ -142,7 +142,7 @@
         "dependencies": [
           2
         ],
-        "status": "done",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -197,6 +197,16 @@
             "details": "src/world/WorldSynthesisNode.cpp에 WORLD 합성 알고리즘 구현. DataPacket에서 F0, 스펙트럼 포락선, 비주기성 지표를 추출하여 시간 도메인 파형으로 재합성. Minimum-phase 필터링, 소스-필터 모델 기반 합성, 윈도우 함수 적용한 오버랩-애드 처리. 실시간 스트리밍과 배치 처리 모드 모두 지원. 품질-속도 트레이드오프를 위한 설정 옵션 제공",
             "status": "done",
             "testStrategy": "원본 음성과 분석-합성 결과의 품질 비교 (PESQ, STOI 측정), 처리 시간 벤치마크, 메모리 사용량 모니터링"
+          },
+          {
+            "id": 6,
+            "title": "WorldSynthesisNode에 포스트필터 훅 추가",
+            "description": "포먼트 시프팅/UV 조정 등 선택적 후처리를 위한 훅 포인트를 WorldSynthesisNode에 추가하고 기본값은 완전 바이패스.",
+            "details": "WorldSynthesisNode::process() 최종 출력 직전에 후처리 체인을 연결할 수 있는 훅을 추가합니다.\n- 인터페이스: IPostFilter(prepare(sampleRate, channels), process(float* interleaved, frames), reset()) 정의\n- 파이프라인: 합성 결과 버퍼 → (옵션) 포스트필터 체인 → 출력\n- 구성: DataPacket 혹은 노드 설정으로 필터 on/off 및 파라미터(formantShift, uvBalance 등) 전달\n- 기본값: 필터 체인 비워진 상태로 완전 바이패스(연산 오버헤드 최소화)\n- 성능: 큰 버퍼에서는 블록 처리, 실시간 경로에서는 작은 청크 처리와 lock-free 큐 고려\n- 안전성: 파라미터 변경 시 thread-safe 스냅샷 교체(더블 버퍼링)로 글리치 방지",
+            "testStrategy": "단위: (1) 바이패스 시 입력==출력(허용 오차 내) 확인, (2) 더미 필터(고정 게인) 적용 시 스펙트럼/레벨 변화 검증\n통합: WORLD 합성 경로에 필터 체인 삽입 후 라운드트립 품질/지연 측정\n성능: 필터 on/off 상태에서 CPU 사용률, 처리 시간 측정(프레임 크기별)",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
           }
         ]
       },
@@ -474,6 +484,26 @@
             "details": "실제 UTAU 프로젝트 파일을 사용하여 전체 파이프라인 테스트를 수행합니다. 기존 resampler와 출력 품질 비교, 다양한 UTAU 버전 (UTAU-SYNTH, OpenUTAU 등)에서의 호환성 검증, 성능 벤치마크를 실시합니다. 에러 처리 및 로깅 시스템 검증, 메모리 사용량 최적화 확인을 포함하여 안정성과 품질을 보장합니다.",
             "status": "pending",
             "testStrategy": "실제 UTAU 프로젝트에서의 end-to-end 테스트, 기존 플러그인과의 품질 비교 분석, 다양한 합성 설정에서의 안정성 검증"
+          },
+          {
+            "id": 6,
+            "title": "Manifest 기반 인자 파싱 연동",
+            "description": "OpenUtau Resampler Manifest(YAML) 정의에 맞춘 커맨드라인/환경 인자 파싱 계층 추가",
+            "details": "resampler.yaml 스키마에 따라 지원 인자/기본값/범위를 선언하고, 이를 기반으로 CLI/환경변수 파싱 계층을 생성합니다.\n- 스키마: name, version, args{name,type,default,range,alias}, envVars, presets\n- 파싱: CLI → 내부 Config 구조체 매핑, 누락 시 env/preset/기본값 순으로 보완\n- 검증: 범위/타입/상호 제약 검증 및 친절한 에러 메시지 제공\n- 버전: manifest 버전 관리와 비호환 변경시 경고/차단 정책",
+            "testStrategy": "단위: 정상/경계/에러 케이스 YAML 파싱 및 CLI 인자 조합 검증\n통합: manifest → CLI 플래그 자동화 테스트(스냅샷), 비호환 변경 시 경고 발생 확인",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 7,
+            "title": "OpenUtau Runner 호환 래퍼",
+            "description": "OpenUtau에서 호출되는 실행 시나리오를 재현하는 간이 래퍼/샌드박스 추가",
+            "details": "OpenUtau가 resampler를 호출하는 런타임 환경을 모사하는 래퍼를 구현합니다.\n- 기능: 인자/환경 구성, 임시 파일 경로 정책, 타임아웃/로그 캡처\n- 샌드박스: 테스트 입력(.ust/.wav)으로 재현 가능한 호출 세트 제공\n- 로깅: 호출 라인, 지속시간, 표준출력/표준에러 수집",
+            "testStrategy": "기능: 대표 호출 시나리오(기본/플래그/긴 구간) 스모크 테스트\n호환: 실제 OpenUtau 호출 로그와 래퍼 재현 로그를 비교해 불일치 탐지",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 7
           }
         ]
       },
@@ -692,27 +722,56 @@
         "status": "pending",
         "dependencies": [],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "UTAU 아티팩트 내보내기 구현",
+            "description": "f0.txt, sp.bin, ap.bin, meta.json 생성기와 저장 경로 정책 구현",
+            "details": "파일 사양에 맞춘 내보내기 구현:\n- f0.txt: 프레임당 f0(Hz) 텍스트, 줄바꿈 LF, NaN은 0 또는 sentinel 처리 정책 정의\n- sp.bin/ap.bin: little-endian double, shape = frames*bins(행우선)\n- meta.json: frames, bins, fftSize, framePeriodMs, sampleRate 등 포함\n- 경로: 출력 디렉토리/파일명 규약, 덮어쓰기/유니크 네이밍 정책\n- 옵션: float 저장 지원(호환 모드) 및 정밀도 주의사항 문서화",
+            "testStrategy": "골든: 소규모 샘플에 대해 참조 아티팩트와 바이트 비교/허용오차 비교\n상호운용: world4utau가 읽을 수 있는지 수동/자동 검증, 역파싱해 round-trip 확인",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 2,
+            "title": "world4utau 상호운용 테스트",
+            "description": "world4utau와 상호 교차 로딩 테스트 케이스 추가 및 호환성 체크리스트",
+            "details": "테스트 하네스에서 world4utau를 호출하여 상호 운용성을 검증합니다.\n- 입력: 당사 생성 f0/sp/ap/meta → world4utau 합성\n- 출력: 오디오/중간 산출물 비교 및 실패 시 진단 로그 저장\n- 스크립트: 재현 가능한 셸/파워셸 스크립트 제공",
+            "testStrategy": "교차: world4utau 산출물과 우리 합성물의 스펙/품질 비교(스펙트럼/LSD)\n회귀: CI에서 주기적으로 실행하여 호환성 퇴행 감지",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 3,
+            "title": "WORLD ON/OFF 빌드 품질 게이트",
+            "description": "WORLD 경로 온/오프 모두 테스트 통과 확인 및 실패 시 차단하는 CI 품질 게이트",
+            "details": "CMake 옵션 VOCEVERSA_WITH_WORLD=ON/OFF 매트릭스를 CI에 추가하고, 두 구성 모두 컴파일/테스트 통과를 강제합니다. 실패 시 PR 차단. 산출물 크기/의존성도 점검합니다.",
+            "testStrategy": "CI: GitHub Actions에서 두 구성 매트릭스 실행, 테스트/스모크 실패 시 실패 처리\n리포트: 빌드 로그와 산출물 메타데이터 업로드",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          }
+        ]
       },
       {
         "id": 12,
-        "title": "Implement TuneLab Extension for Voceversa Integration",
-        "description": "Develop a TuneLab extension (.tlx) to integrate the voceversa C++ engine, enabling synthesis via WORLD, PSOLA, and ONNX backends with realtime-friendly settings.",
-        "details": "1.  **Extension API Adapter Development:** Create the necessary C++ code to interface with TuneLab's extension API, understanding its plugin architecture for loading external libraries and exposing functionalities.\n2.  **C-ABI Integration:** Utilize the public C-ABI (from Task 9) to load and interact with the voceversa C++ engine, ensuring proper function calls, data marshalling, and error handling across the C-ABI boundary.\n3.  **Backend Exposure:** Expose the synthesis capabilities of voceversa for WORLD, PSOLA, and ONNX backends by mapping TuneLab's synthesis requests to the appropriate voceversa functions and managing their lifecycle.\n4.  **Realtime-Friendly Settings:** Design the integration to support realtime audio processing, optimizing buffer sizes, minimizing latency, and providing configurable parameters within the extension for performance/quality balance.\n5.  **Packaging (.tlx):** Implement the necessary steps to package the compiled C++ code (dynamic library) and any required assets or configuration files into the .tlx format according to TuneLab's specification.\n6.  **Cross-Platform Support:** Ensure the extension compiles and functions correctly on Windows, macOS, and Linux, handling platform-specific build configurations and library loading.\n7.  **Minimal UI Wiring:** Identify and implement the minimal necessary UI elements within TuneLab to control the voceversa extension, such as exposing parameters, selecting synthesis backends, and triggering operations.\n8.  **Demo Project Import/Export Verification:** Create and verify sample TuneLab projects that utilize the voceversa extension, testing the ability to import projects and export projects that correctly embed or reference the extension's settings and data.",
-        "testStrategy": "1.  **Automated Smoke Tests:** Develop automated tests to verify basic functionality, including extension loading, voceversa engine initialization, and simple synthesis operations for each backend (WORLD, PSOLA, ONNX).\n2.  **Functional Testing:** Verify that all exposed synthesis backends produce audible output. Test various realtime-friendly settings (e.g., buffer sizes, quality presets) and observe their impact on performance and audio quality. Confirm cross-platform functionality on Windows, macOS, and Linux. Test UI controls within TuneLab for correct interaction.\n3.  **Integration Testing:** Verify seamless integration with TuneLab's project import/export functionality using sample projects. Ensure projects created with the extension can be opened and played back correctly.\n4.  **Documentation Verification:** Review the generated installation and usage documentation for clarity, accuracy, and completeness.\n5.  **Performance Testing:** Conduct basic performance tests to ensure the realtime-friendly settings achieve desired latency and CPU usage targets.",
+        "title": "TuneLab 통합을 위한 Voceversa 확장(.tlx) 구현",
+        "description": "Voceversa C++ 엔진을 TuneLab에 통합하는 확장(.tlx)을 개발합니다. WORLD, PSOLA, ONNX 백엔드를 지원하고 실시간 친화 설정을 제공합니다.",
         "status": "pending",
         "dependencies": [
           9
         ],
         "priority": "high",
+        "details": "1.  **Extension API Adapter Development:** Create the necessary C++ code to interface with TuneLab's extension API, understanding its plugin architecture for loading external libraries and exposing functionalities.\n2.  **C-ABI Integration:** Utilize the public C-ABI (from Task 9) to load and interact with the voceversa C++ engine, ensuring proper function calls, data marshalling, and error handling across the C-ABI boundary.\n3.  **Backend Exposure:** Expose the synthesis capabilities of voceversa for WORLD, PSOLA, and ONNX backends by mapping TuneLab's synthesis requests to the appropriate voceversa functions and managing their lifecycle.\n4.  **Realtime-Friendly Settings:** Design the integration to support realtime audio processing, optimizing buffer sizes, minimizing latency, and providing configurable parameters within the extension for performance/quality balance.\n5.  **Packaging (.tlx):** Implement the necessary steps to package the compiled C++ code (dynamic library) and any required assets or configuration files into the .tlx format according to TuneLab's specification.\n6.  **Cross-Platform Support:** Ensure the extension compiles and functions correctly on Windows, macOS, and Linux, handling platform-specific build configurations and library loading.\n7.  **Minimal UI Wiring:** Identify and implement the minimal necessary UI elements within TuneLab to control the voceversa extension, such as exposing parameters, selecting synthesis backends, and triggering operations.\n8.  **Demo Project Import/Export Verification:** Create and verify sample TuneLab projects that utilize the voceversa extension, testing the ability to import projects and export projects that correctly embed or reference the extension's settings and data.",
+        "testStrategy": "1.  **Automated Smoke Tests:** Develop automated tests to verify basic functionality, including extension loading, voceversa engine initialization, and simple synthesis operations for each backend (WORLD, PSOLA, ONNX).\n2.  **Functional Testing:** Verify that all exposed synthesis backends produce audible output. Test various realtime-friendly settings (e.g., buffer sizes, quality presets) and observe their impact on performance and audio quality. Confirm cross-platform functionality on Windows, macOS, and Linux. Test UI controls within TuneLab for correct interaction.\n3.  **Integration Testing:** Verify seamless integration with TuneLab's project import/export functionality using sample projects. Ensure projects created with the extension can be opened and played back correctly.\n4.  **Documentation Verification:** Review the generated installation and usage documentation for clarity, accuracy, and completeness.\n5.  **Performance Testing:** Conduct basic performance tests to ensure the realtime-friendly settings achieve desired latency and CPU usage targets.",
         "subtasks": []
       },
       {
         "id": 13,
-        "title": "Build a benchmarking + positioning suite comparing voceversa vs existing pipelines",
-        "description": "Develop a comprehensive benchmarking suite to quantitatively and qualitatively compare voceversa's performance against established speech synthesis pipelines like OpenUtau+WORLDLINE-R, ENUNU/NNSVS, and TuneLab engines.",
-        "details": "The benchmarking suite will be implemented under `tools/bench`.\n1.  **Golden Dataset Creation**: Curate a diverse golden dataset of phrases and styles (e.g., spoken, sung, different emotions, languages if applicable). This dataset should be representative of real-world use cases and include challenging cases for pitch-shift and alignment. Define clear recording/annotation standards for the dataset.\n2.  **Integration Points**:\n    *   **Voceversa**: Integrate voceversa via the OpenUtau resampler adapter (leveraging Task 7) and the TuneLab .tlx extension (leveraging Task 12). This will allow benchmarking voceversa in contexts relevant to its target integrations.\n    *   **OpenUtau+WORLDLINE-R**: Set up a reference OpenUtau environment with WORLDLINE-R for comparison.\n    *   **ENUNU/NNSVS**: Configure ENUNU/NNSVS with reference models for benchmarking.\n    *   **TuneLab Engines**: Utilize TuneLab's native engines for comparison, potentially requiring specific setup or API calls.\n3.  **Metric Implementation**:\n    *   **Latency**: Develop scripts to measure end-to-end and streaming latency for each pipeline. This involves precise timing of input to output.\n    *   **CPU/GPU Usage**: Implement monitoring tools to capture CPU and GPU utilization during synthesis for each pipeline.\n    *   **MOS-lite (ABX/MUSHRA)**: Design and prepare for subjective listening tests. This involves generating A/B audio pairs or MUSHRA-style samples. The actual human evaluation will be a separate activity, but the suite should generate the necessary audio artifacts.\n    *   **STFT/LSD (Log-Spectral Distance)**: Implement objective metrics for spectral similarity.\n    *   **Pitch-shift Formant Preservation**: Develop methods to quantify how well formants are preserved during pitch shifting operations. This might involve analyzing spectrograms or specific formant tracking algorithms.\n    *   **Alignment Robustness**: Design tests to assess how well each system handles misalignments or challenging input conditions (e.g., noisy input, unusual phrasing).\n4.  **Reproducible Scripts**: All benchmarking procedures must be fully scripted and reproducible, allowing for consistent re-evaluation. Scripts should manage environment setup, data processing, execution of synthesis, and metric calculation.\n5.  **Artifact Generation**: Automate the generation of result tables and plots for all measured metrics. Automate the generation of A/B audio samples for subjective evaluation.\n6.  **CI Integration**: Configure a nightly CI job (leveraging Task 10) that runs a subset of the benchmarks to detect performance regressions early.\n7.  **Report Generation**: Prepare a detailed report in `docs/benchmarks` summarizing the findings, including result tables, plots, and a README section outlining claims and caveats of the benchmark.",
-        "testStrategy": "1.  **Script Validation**: Verify that all benchmarking scripts run without errors across all target pipelines and produce expected output formats (e.g., CSV, JSON, audio files).\n2.  **Reproducibility Check**: Run the full benchmark suite multiple times on the same environment to ensure consistent results within an acceptable margin of error.\n3.  **Metric Sanity Check**: Manually inspect a subset of generated metrics (e.g., listen to A/B audio, visually inspect spectrograms for STFT/LSD, check CPU/GPU logs) to ensure they are plausible and correctly calculated.\n4.  **Integration Verification**: Confirm that voceversa is correctly invoked via the OpenUtau adapter and TuneLab extension, and that external pipelines (ENUNU, WORLDLINE-R) are correctly integrated and producing output.\n5.  **CI Job Execution**: Verify that the nightly CI job successfully triggers, completes, and publishes the benchmark results or flags regressions.\n6.  **Report Review**: Conduct a thorough review of the `docs/benchmarks` report for accuracy, clarity, completeness, and adherence to the specified artifacts (tables, plots, claims, caveats). Ensure all claims are supported by data.",
+        "title": "voceversa vs 기존 파이프라인 벤치마킹·포지셔닝 스위트 구축",
+        "description": "OpenUtau+WORLDLINE-R, ENUNU/NNSVS, TuneLab 엔진 등과 비교하여 voceversa의 성능을 정량·정성적으로 평가하는 종합 벤치마크 스위트를 개발합니다.",
         "status": "pending",
         "dependencies": [
           7,
@@ -720,28 +779,28 @@
           12
         ],
         "priority": "high",
+        "details": "The benchmarking suite will be implemented under `tools/bench`.\n1.  **Golden Dataset Creation**: Curate a diverse golden dataset of phrases and styles (e.g., spoken, sung, different emotions, languages if applicable). This dataset should be representative of real-world use cases and include challenging cases for pitch-shift and alignment. Define clear recording/annotation standards for the dataset.\n2.  **Integration Points**:\n    *   **Voceversa**: Integrate voceversa via the OpenUtau resampler adapter (leveraging Task 7) and the TuneLab .tlx extension (leveraging Task 12). This will allow benchmarking voceversa in contexts relevant to its target integrations.\n    *   **OpenUtau+WORLDLINE-R**: Set up a reference OpenUtau environment with WORLDLINE-R for comparison.\n    *   **ENUNU/NNSVS**: Configure ENUNU/NNSVS with reference models for benchmarking.\n    *   **TuneLab Engines**: Utilize TuneLab's native engines for comparison, potentially requiring specific setup or API calls.\n3.  **Metric Implementation**:\n    *   **Latency**: Develop scripts to measure end-to-end and streaming latency for each pipeline. This involves precise timing of input to output.\n    *   **CPU/GPU Usage**: Implement monitoring tools to capture CPU and GPU utilization during synthesis for each pipeline.\n    *   **MOS-lite (ABX/MUSHRA)**: Design and prepare for subjective listening tests. This involves generating A/B audio pairs or MUSHRA-style samples. The actual human evaluation will be a separate activity, but the suite should generate the necessary audio artifacts.\n    *   **STFT/LSD (Log-Spectral Distance)**: Implement objective metrics for spectral similarity.\n    *   **Pitch-shift Formant Preservation**: Develop methods to quantify how well formants are preserved during pitch shifting operations. This might involve analyzing spectrograms or specific formant tracking algorithms.\n    *   **Alignment Robustness**: Design tests to assess how well each system handles misalignments or challenging input conditions (e.g., noisy input, unusual phrasing).\n4.  **Reproducible Scripts**: All benchmarking procedures must be fully scripted and reproducible, allowing for consistent re-evaluation. Scripts should manage environment setup, data processing, execution of synthesis, and metric calculation.\n5.  **Artifact Generation**: Automate the generation of result tables and plots for all measured metrics. Automate the generation of A/B audio samples for subjective evaluation.\n6.  **CI Integration**: Configure a nightly CI job (leveraging Task 10) that runs a subset of the benchmarks to detect performance regressions early.\n7.  **Report Generation**: Prepare a detailed report in `docs/benchmarks` summarizing the findings, including result tables, plots, and a README section outlining claims and caveats of the benchmark.",
+        "testStrategy": "1.  **Script Validation**: Verify that all benchmarking scripts run without errors across all target pipelines and produce expected output formats (e.g., CSV, JSON, audio files).\n2.  **Reproducibility Check**: Run the full benchmark suite multiple times on the same environment to ensure consistent results within an acceptable margin of error.\n3.  **Metric Sanity Check**: Manually inspect a subset of generated metrics (e.g., listen to A/B audio, visually inspect spectrograms for STFT/LSD, check CPU/GPU logs) to ensure they are plausible and correctly calculated.\n4.  **Integration Verification**: Confirm that voceversa is correctly invoked via the OpenUtau adapter and TuneLab extension, and that external pipelines (ENUNU, WORLDLINE-R) are correctly integrated and producing output.\n5.  **CI Job Execution**: Verify that the nightly CI job successfully triggers, completes, and publishes the benchmark results or flags regressions.\n6.  **Report Review**: Conduct a thorough review of the `docs/benchmarks` report for accuracy, clarity, completeness, and adherence to the specified artifacts (tables, plots, claims, caveats). Ensure all claims are supported by data.",
         "subtasks": []
       },
       {
         "id": 14,
-        "title": "Implement Persistent Resampler Server and Lightweight Runners",
-        "description": "Develop a persistent resampler server with low-latency IPC (HTTP/gRPC/UDS) and lightweight runners for OpenUtau and classic UTAU, designed to keep the synthesis engine hot and minimize first-render latency.",
-        "details": "This task involves creating a server application that hosts the voceversa resampler engine in a persistent mode. The server should support low-latency Inter-Process Communication (IPC) mechanisms, specifically HTTP, gRPC, and Unix Domain Sockets (UDS), to handle batched and streaming synthesis requests. Key goals include keeping the engine hot by preloading models and managing thread pools, and minimizing the first-render latency for synthesis requests.\n\nDeliverables for this task include:\n1.  `voceversa-server` binary: The main server application.\n2.  OpenUtau Runner: A lightweight client application or library compatible with OpenUtau's resampler interface.\n3.  UTAU Tool2-compatible CLI shim: A command-line interface shim that mimics the behavior of `resampler.exe` and `wavtool.exe` for classic UTAU, communicating with the server.\n4.  Protocol documentation: Comprehensive documentation for the chosen IPC protocols and data formats.\n5.  Smoke tests: Basic tests to verify the server and runner functionality.\n\nThe implementation must be cross-platform (Windows, macOS, Linux). A fallback mechanism to a single-shot CLI mode should be provided if the server is unavailable or not running.",
-        "testStrategy": "1.  **Server Functionality Tests:** Verify server startup, graceful shutdown, and persistent operation. Test concurrent connections and request handling.\n2.  **IPC Protocol Verification:** Develop automated tests for each IPC mechanism (HTTP, gRPC, UDS) to ensure correct data serialization/deserialization, request/response handling, and error reporting. Measure latency for various request sizes.\n3.  **Runner Compatibility Tests:**\n    *   **OpenUtau Runner:** Integrate the runner with OpenUtau and perform synthesis tests using various voicebanks and settings. Compare output quality and performance against direct engine calls.\n    *   **UTAU CLI Shim:** Test the CLI shim with classic UTAU projects, ensuring it correctly processes command-line arguments and produces expected output files. Verify compatibility with `resampler.exe` and `wavtool.exe` specifications.\n4.  **Performance Benchmarking:** Measure first-render latency, throughput for batched requests, and resource utilization (CPU, memory) under load. Compare performance with single-shot CLI mode.\n5.  **Cross-Platform Testing:** Deploy and test the server and runners on Windows, macOS, and Linux environments to ensure full compatibility and consistent behavior.\n6.  **Fallback Mechanism Test:** Verify that the runners correctly fall back to single-shot CLI mode when the server is not running or unreachable.\n7.  **Documentation Review:** Review the protocol documentation for clarity, completeness, and accuracy against the implemented protocols.",
+        "title": "영속 리샘플러 서버와 경량 러너 구현",
+        "description": "저지연 IPC(HTTP/gRPC/UDS)를 사용하는 영속 리샘플러 서버와 OpenUtau/클래식 UTAU용 경량 러너를 개발하여 엔진을 상시 가열 상태로 유지하고 첫 렌더 지연을 최소화합니다.",
         "status": "pending",
         "dependencies": [
           7,
           9
         ],
         "priority": "high",
+        "details": "This task involves creating a server application that hosts the voceversa resampler engine in a persistent mode. The server should support low-latency Inter-Process Communication (IPC) mechanisms, specifically HTTP, gRPC, and Unix Domain Sockets (UDS), to handle batched and streaming synthesis requests. Key goals include keeping the engine hot by preloading models and managing thread pools, and minimizing the first-render latency for synthesis requests.\n\nDeliverables for this task include:\n1.  `voceversa-server` binary: The main server application.\n2.  OpenUtau Runner: A lightweight client application or library compatible with OpenUtau's resampler interface.\n3.  UTAU Tool2-compatible CLI shim: A command-line interface shim that mimics the behavior of `resampler.exe` and `wavtool.exe` for classic UTAU, communicating with the server.\n4.  Protocol documentation: Comprehensive documentation for the chosen IPC protocols and data formats.\n5.  Smoke tests: Basic tests to verify the server and runner functionality.\n\nThe implementation must be cross-platform (Windows, macOS, Linux). A fallback mechanism to a single-shot CLI mode should be provided if the server is unavailable or not running.",
+        "testStrategy": "1.  **Server Functionality Tests:** Verify server startup, graceful shutdown, and persistent operation. Test concurrent connections and request handling.\n2.  **IPC Protocol Verification:** Develop automated tests for each IPC mechanism (HTTP, gRPC, UDS) to ensure correct data serialization/deserialization, request/response handling, and error reporting. Measure latency for various request sizes.\n3.  **Runner Compatibility Tests:**\n    *   **OpenUtau Runner:** Integrate the runner with OpenUtau and perform synthesis tests using various voicebanks and settings. Compare output quality and performance against direct engine calls.\n    *   **UTAU CLI Shim:** Test the CLI shim with classic UTAU projects, ensuring it correctly processes command-line arguments and produces expected output files. Verify compatibility with `resampler.exe` and `wavtool.exe` specifications.\n4.  **Performance Benchmarking:** Measure first-render latency, throughput for batched requests, and resource utilization (CPU, memory) under load. Compare performance with single-shot CLI mode.\n5.  **Cross-Platform Testing:** Deploy and test the server and runners on Windows, macOS, and Linux environments to ensure full compatibility and consistent behavior.\n6.  **Fallback Mechanism Test:** Verify that the runners correctly fall back to single-shot CLI mode when the server is not running or unreachable.\n7.  **Documentation Review:** Review the protocol documentation for clarity, completeness, and accuracy against the implemented protocols.",
         "subtasks": []
       },
       {
         "id": 15,
-        "title": "UTAU Flags and Pitch Curve Mapping for Voceversa Backends",
-        "description": "Design and implement the UTAU-compatible flags and pitch curve mapping logic within the UtauAdapter, supporting WORLD, PSOLA, and ONNX backends with configurable defaults and overrides.",
-        "details": "This task involves extending the UtauAdapter to fully interpret and translate UTAU project parameters into the internal data structures required by voceversa's synthesis backends. Key implementation steps include:\n- **UTAU Parameter Parsing:** Implement robust parsing for UTAU-specific parameters such as velocity, modulation, gender (formant shift), vibrato, and other note-level flags from `.ust` files or command-line inputs.\n- **Base64 RLE Pitch String Decoding:** Develop a decoder for the Base64 Run-Length Encoded pitch strings found in UTAU's `_pitch.txt` format, converting them into a usable pitch curve representation.\n- **Curve-to-Parameter Mapping:** Design and implement a flexible system to map UTAU's continuous curves (pitch, volume, vibrato depth/rate) to the discrete or continuous parameters expected by the WORLD, PSOLA, and ONNX synthesis backends. This includes handling interpolation and smoothing.\n- **Formant-Preserving Pitch/Time Scaling:** Integrate controls for formant-preserving pitch shifting and time scaling, ensuring these transformations are correctly applied through the selected synthesis backend while maintaining naturalness.\n- **Default Values and Overrides:** Define a set of safe default values for all mapped parameters. Implement a mechanism for per-backend overrides, allowing specific synthesis engines (WORLD, PSOLA, ONNX) to have their own custom mapping rules or parameter ranges.\n- **Output:** Produce a detailed specification document outlining the mapping logic, parameter ranges, default behaviors, and override mechanisms. The implementation will be integrated into the `UtauAdapter` component.",
-        "testStrategy": "- **Unit Tests:**\n    - Develop unit tests for the Base64 RLE pitch string decoder, covering various valid and edge-case encoded strings.\n    - Create unit tests for parsing UTAU flags and note properties, ensuring correct extraction of velocity, modulation, and other parameters.\n    - Test the curve-to-parameter mapping logic in isolation, verifying that UTAU curves are accurately transformed into backend-compatible parameter sequences (e.g., F0 contours, gain envelopes).\n- **Integration Tests:**\n    - Prepare a comprehensive suite of sample `.ust` cases that exercise all supported UTAU flags, pitch curves, and scaling parameters.\n    - Run these `.ust` cases through the `UtauAdapter` and verify that the generated internal parameters for WORLD, PSOLA, and ONNX backends are correct and consistent with the UTAU input.\n    - Perform end-to-end synthesis tests using the mapped parameters for each backend (WORLD, PSOLA, ONNX) and compare the synthesized audio output against reference outputs from traditional UTAU resamplers (e.g., world4utau) for quality, accuracy, and adherence to UTAU's intended sound.\n    - Verify that per-backend overrides correctly alter the mapping behavior as specified.\n- **Regression Tests:** Ensure that the new mapping logic does not negatively impact existing `UtauAdapter` functionalities or break compatibility with basic UTAU project structures.\n- **Documentation Review:** Validate that the generated specification document accurately reflects the implemented mapping logic and serves as a clear reference for future development and maintenance.",
+        "title": "Voceversa 백엔드용 UTAU 플래그 및 피치 커브 매핑",
+        "description": "UtauAdapter 내에서 UTAU 호환 플래그와 피치 커브 매핑 로직을 설계·구현합니다. WORLD, PSOLA, ONNX 백엔드를 지원하며 기본값과 오버라이드를 구성 가능하게 합니다.",
         "status": "pending",
         "dependencies": [
           7,
@@ -749,14 +808,42 @@
           5
         ],
         "priority": "high",
-        "subtasks": []
+        "details": "This task involves extending the UtauAdapter to fully interpret and translate UTAU project parameters into the internal data structures required by voceversa's synthesis backends. Key implementation steps include:\n- **UTAU Parameter Parsing:** Implement robust parsing for UTAU-specific parameters such as velocity, modulation, gender (formant shift), vibrato, and other note-level flags from `.ust` files or command-line inputs.\n- **Base64 RLE Pitch String Decoding:** Develop a decoder for the Base64 Run-Length Encoded pitch strings found in UTAU's `_pitch.txt` format, converting them into a usable pitch curve representation.\n- **Curve-to-Parameter Mapping:** Design and implement a flexible system to map UTAU's continuous curves (pitch, volume, vibrato depth/rate) to the discrete or continuous parameters expected by the WORLD, PSOLA, and ONNX synthesis backends. This includes handling interpolation and smoothing.\n- **Formant-Preserving Pitch/Time Scaling:** Integrate controls for formant-preserving pitch shifting and time scaling, ensuring these transformations are correctly applied through the selected synthesis backend while maintaining naturalness.\n- **Default Values and Overrides:** Define a set of safe default values for all mapped parameters. Implement a mechanism for per-backend overrides, allowing specific synthesis engines (WORLD, PSOLA, ONNX) to have their own custom mapping rules or parameter ranges.\n- **Output:** Produce a detailed specification document outlining the mapping logic, parameter ranges, default behaviors, and override mechanisms. The implementation will be integrated into the `UtauAdapter` component.",
+        "testStrategy": "- **Unit Tests:**\n    - Develop unit tests for the Base64 RLE pitch string decoder, covering various valid and edge-case encoded strings.\n    - Create unit tests for parsing UTAU flags and note properties, ensuring correct extraction of velocity, modulation, and other parameters.\n    - Test the curve-to-parameter mapping logic in isolation, verifying that UTAU curves are accurately transformed into backend-compatible parameter sequences (e.g., F0 contours, gain envelopes).\n- **Integration Tests:**\n    - Prepare a comprehensive suite of sample `.ust` cases that exercise all supported UTAU flags, pitch curves, and scaling parameters.\n    - Run these `.ust` cases through the `UtauAdapter` and verify that the generated internal parameters for WORLD, PSOLA, and ONNX backends are correct and consistent with the UTAU input.\n    - Perform end-to-end synthesis tests using the mapped parameters for each backend (WORLD, PSOLA, ONNX) and compare the synthesized audio output against reference outputs from traditional UTAU resamplers (e.g., world4utau) for quality, accuracy, and adherence to UTAU's intended sound.\n    - Verify that per-backend overrides correctly alter the mapping behavior as specified.\n- **Regression Tests:** Ensure that the new mapping logic does not negatively impact existing `UtauAdapter` functionalities or break compatibility with basic UTAU project structures.\n- **Documentation Review:** Validate that the generated specification document accurately reflects the implemented mapping logic and serves as a clear reference for future development and maintenance.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "백엔드별 플래그 스키마/기본값 정의",
+            "description": "WORLD/PSOLA/ONNX 백엔드별 지원 플래그 목록, 타입, 범위, 기본값 정의",
+            "status": "pending",
+            "dependencies": [],
+            "details": "플래그 스키마를 선언적(JSON/YAML)으로 정의합니다.\n- 공통: velocity, modulation, gender(formant), flags, offset/length\n- WORLD/PSOLA/ONNX별 지원 여부/범위/기본값/매핑키 지정\n- 문서: docs/flag-schema.md에 표와 예시 구성",
+            "testStrategy": "스키마 검증: JSON Schema로 정적 검증, 예시 파일 로드 테스트\n호환: 미지원 플래그 시 경고/대체전략 적용 여부 확인"
+          },
+          {
+            "id": 2,
+            "title": "피치 커브 매핑 구현",
+            "description": "UTAU pitchbend 커브를 내부 타임라인/프레임 해상도로 변환하는 보간/양자화 로직 구현",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Base64 RLE `_pitch.txt` 디코더 → 시간축 샘플로 복원 → 프레임 해상도(홉)로 보간/양자화.\n- 보간: 선형/스플라인 선택, 외삽/경계 처리\n- 정합: note/expressions와의 정렬 보장, 샘플레이트 변화 대응",
+            "testStrategy": "단위: 인조 커브(계단/사인) 디코딩/보간 정확도 측정\n통합: UST 샘플 세트로 매핑 후 F0 컨투어 RMSE 검증"
+          },
+          {
+            "id": 3,
+            "title": "호환성 테스트(UST/Expressions)",
+            "description": "샘플 UST/표현식 셋으로 매핑 로직 회귀 테스트 작성",
+            "status": "pending",
+            "dependencies": [],
+            "details": "샘플 UST/표현식 조합(플래그/피치/길이) 세트를 만들고, 백엔드별 내부 파라미터가 기대 규칙을 따르는지 검증하는 회귀 테스트를 작성합니다.",
+            "testStrategy": "스냅샷: 내부 파라미터(JSON) 스냅샷 비교, 의도된 변경 외 차이 탐지\nE2E: 간단 합성으로 청감/피치 일치성 점검"
+          }
+        ]
       },
       {
         "id": 16,
-        "title": "Warm-start & Caching Layer for Repetitive Renders",
-        "description": "Implement a comprehensive caching subsystem to reduce redundant I/O and computation for voicebank features, ONNX models, pitchmarks, and segment-level reuse, ensuring deterministic invalidation.",
-        "details": "Develop a multi-layered caching system to optimize performance for repetitive synthesis operations. This includes:\n1.  **Voicebank Feature Cache:** Store pre-analyzed frequency (frq), spectral envelope (sp), and aperiodicity (ap) data for voicebank segments. This cache should be indexed by voicebank ID, segment identifier, and any relevant analysis parameters.\n2.  **ONNX Model/Session Pool:** Maintain a pool of loaded ONNX models and inference sessions to avoid repeated loading and initialization overhead. Implement a mechanism to manage session lifecycle and resource cleanup.\n3.  **PSOLA Pitchmark Cache:** Cache computed pitchmarks for PSOLA synthesis, indexed by input pitch curve, duration, and other relevant PSOLA parameters.\n4.  **Segment-Level Reuse:** Explore and implement mechanisms for reusing entire synthesized audio segments if inputs (e.g., text, flags, pitch curve) are identical.\nThe caching system must support deterministic cache invalidation based on changes in input parameters, UTAU flags, and the hash of the underlying synthesis model (e.g., ONNX model hash). Implement configurable toggles to enable/disable specific cache layers or the entire subsystem. Design and integrate metrics hooks to monitor cache hit/miss rates, size, and performance impact.",
-        "testStrategy": "1.  **Unit Tests:**\n    *   Develop comprehensive unit tests for each cache component (voicebank feature cache, ONNX pool, pitchmark cache) to verify correct storage, retrieval, and eviction logic.\n    *   Test cache invalidation mechanisms rigorously, ensuring that changes in inputs, flags, or model hashes correctly trigger invalidation and re-computation.\n    *   Verify the functionality of cache toggles (enable/disable) and their impact on cache behavior.\n2.  **Integration Tests:**\n    *   Integrate the caching subsystem with the synthesis pipeline (e.g., via the persistent resampler server from Task 14 or TuneLab extension from Task 12) and run synthesis tasks with repetitive inputs to confirm performance improvements and correctness.\n    *   Verify that cached data is correctly used across multiple synthesis requests.\n3.  **Performance & Metrics Tests:**\n    *   Utilize the benchmarking suite (Task 13) to measure the reduction in I/O and compute time with the caching layer enabled versus disabled.\n    *   Verify that metrics hooks correctly report cache hit/miss rates, cache size, and other relevant performance indicators.\n4.  **Concurrency Tests:**\n    *   Test the caching system under concurrent access scenarios to ensure thread-safety and data integrity.",
+        "title": "반복 렌더를 위한 워姆스타트 및 캐싱 레이어",
+        "description": "보이스뱅크 특징, ONNX 모델, 피치마크, 세그먼트 재사용 등을 위한 캐싱 서브시스템을 구현하고 결정적 무효화 규칙으로 불필요한 I/O와 연산을 줄입니다.",
         "status": "pending",
         "dependencies": [
           11,
@@ -765,12 +852,257 @@
           15
         ],
         "priority": "medium",
+        "details": "Develop a multi-layered caching system to optimize performance for repetitive synthesis operations. This includes:\n1.  **Voicebank Feature Cache:** Store pre-analyzed frequency (frq), spectral envelope (sp), and aperiodicity (ap) data for voicebank segments. This cache should be indexed by voicebank ID, segment identifier, and any relevant analysis parameters.\n2.  **ONNX Model/Session Pool:** Maintain a pool of loaded ONNX models and inference sessions to avoid repeated loading and initialization overhead. Implement a mechanism to manage session lifecycle and resource cleanup.\n3.  **PSOLA Pitchmark Cache:** Cache computed pitchmarks for PSOLA synthesis, indexed by input pitch curve, duration, and other relevant PSOLA parameters.\n4.  **Segment-Level Reuse:** Explore and implement mechanisms for reusing entire synthesized audio segments if inputs (e.g., text, flags, pitch curve) are identical.\nThe caching system must support deterministic cache invalidation based on changes in input parameters, UTAU flags, and the hash of the underlying synthesis model (e.g., ONNX model hash). Implement configurable toggles to enable/disable specific cache layers or the entire subsystem. Design and integrate metrics hooks to monitor cache hit/miss rates, size, and performance impact.",
+        "testStrategy": "1.  **Unit Tests:**\n    *   Develop comprehensive unit tests for each cache component (voicebank feature cache, ONNX pool, pitchmark cache) to verify correct storage, retrieval, and eviction logic.\n    *   Test cache invalidation mechanisms rigorously, ensuring that changes in inputs, flags, or model hashes correctly trigger invalidation and re-computation.\n    *   Verify the functionality of cache toggles (enable/disable) and their impact on cache behavior.\n2.  **Integration Tests:**\n    *   Integrate the caching subsystem with the synthesis pipeline (e.g., via the persistent resampler server from Task 14 or TuneLab extension from Task 12) and run synthesis tasks with repetitive inputs to confirm performance improvements and correctness.\n    *   Verify that cached data is correctly used across multiple synthesis requests.\n3.  **Performance & Metrics Tests:**\n    *   Utilize the benchmarking suite (Task 13) to measure the reduction in I/O and compute time with the caching layer enabled versus disabled.\n    *   Verify that metrics hooks correctly report cache hit/miss rates, cache size, and other relevant performance indicators.\n4.  **Concurrency Tests:**\n    *   Test the caching system under concurrent access scenarios to ensure thread-safety and data integrity.",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "OpenUtau 통합 패키지",
+        "description": "Resampler Manifest(YAML), 샘플 플래그/표현식 맵핑, 최소 샘플 프로젝트, CI 스냅샷 테스트 등으로 버전 간 출력 검증을 포함한 일류 OpenUtau 통합을 제공합니다.",
+        "status": "pending",
+        "dependencies": [
+          7,
+          14,
+          15
+        ],
+        "priority": "high",
+        "details": "This task involves creating all necessary components for seamless integration of voceversa with OpenUtau.\n1.  **Resampler Manifest (YAML):** Define the structure and content of the `resampler.yaml` file required by OpenUtau. This manifest should declare voceversa's capabilities, supported sample rates, bit depths, and any specific parameters it can handle. It should also specify the command-line interface for invoking the voceversa resampler, ideally pointing to the persistent resampler server.\n2.  **Sample Flags/Expressions Mapping:** Map OpenUtau's internal note properties and expressions (e.g., velocity, modulation, gender, vibrato, flags) to voceversa's internal parameters. Leverage the `UtauAdapter` (Task 7, 15) to ensure correct translation. Document this mapping clearly.\n3.  **Minimal Sample Project:** Create a small, self-contained OpenUtau project (`.ust` file, voicebank, `resampler.yaml`) that demonstrates basic voceversa functionality. This project should serve as a quick-start guide and a reference for users. Include a simple melody with a few common UTAU flags to showcase the mapping.\n4.  **CI Snapshot Tests:** Develop automated tests that use the minimal sample project to render audio with voceversa. Capture \"golden\" audio outputs (snapshots) for specific OpenUtau/voceversa versions. Implement a comparison mechanism (e.g., perceptual audio difference, waveform comparison, feature comparison like pitch/formant contours) to detect regressions or unexpected changes in output across future builds or OpenUtau versions. Integrate these tests into the CI/CD pipeline.",
+        "testStrategy": "1.  **Manifest Validation:** Use OpenUtau's internal manifest parser (if available, or simulate its behavior) to validate the `resampler.yaml` for correctness and adherence to OpenUtau's specification. Verify that all declared parameters are correctly recognized.\n2.  **Flags/Expressions Mapping Tests:** Create unit tests within the `UtauAdapter` (or a dedicated mapping module) to ensure that various OpenUtau flags and expressions are correctly translated into voceversa's internal parameters. Test edge cases and combinations of flags.\n3.  **Sample Project Functionality:** Manually load the minimal sample project in OpenUtau and verify that voceversa is recognized as a resampler. Render the project and visually/auditorily inspect the output for correctness and quality.\n4.  **CI Snapshot Test Automation:** Run the automated snapshot tests in a CI environment. Verify that the tests correctly compare current outputs against golden snapshots. Introduce intentional changes to voceversa's output (e.g., a minor bug fix affecting pitch) and ensure the snapshot tests fail as expected. Test the process of updating golden snapshots when changes are intentional.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Resampler Manifest (YAML) 초안 작성",
+            "description": "OpenUtau용 리샘플러 매니페스트 작성: 지원 인자 정의, 기본값/범위, 표현식 매핑 키 예약어 포함. 안전 기본값과 버전 필드 포함.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "resampler.yaml에 name, version, args, defaults, ranges, presets, cliTemplate 필드 정의.\n- 경로/인용 규칙(Windows/Unix)과 환경 변수 치환 규칙 문서화\n- 파일 위치와 배포 패키지 포함 방법 정의",
+            "testStrategy": "정적: 스키마/링터로 YAML 검증\n동적: OpenUtau(또는 모사기)로 로드 테스트 및 파라미터 인식 확인"
+          },
+          {
+            "id": 2,
+            "title": "플래그/표현식 하위셋 맵핑 표 초안",
+            "description": "moresampler/straycat 주요 플래그를 voceversa 백엔드 옵션에 매핑. 미지원 항목 표시 및 안전 대안 제시.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "docs/openutau_mapping.md에 표로 정리: 플래그명/타입/범위/기본값/백엔드별 처리.\n- 미지원 항목은 경고/무시/대체 전략을 병기",
+            "testStrategy": "문서 일치성: 구현된 매핑과 표의 자동 교차검증 스크립트\n샘플 UST로 플래그 인식/경고 발생 여부 테스트"
+          },
+          {
+            "id": 3,
+            "title": "샘플 프로젝트 + 스냅샷 테스트",
+            "description": "OpenUtau 샘플 프로젝트 구성, 고정 입력/출력 경로와 리렌더 스냅샷 비교 테스트 작성(CI에서 OS별 해시 비교).",
+            "status": "pending",
+            "dependencies": [],
+            "details": "minimal OU 프로젝트(짧은 멜로디, 기본 플래그)와 스크립트를 저장하고, 렌더 결과를 golden으로 보관하여 스냅샷 비교를 자동화합니다. OS별 라인엔딩/부동소수점 차이는 허용 오차로 처리.",
+            "testStrategy": "스냅샷: 오디오/피치/메트릭 비교(PESQ/STFT-LSD/해시)\nCI: 변경 시 자동 실행 및 차이 리포트 업로드"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "voceversa 및 경쟁 엔진 종합 벤치마킹 스위트 확장",
+        "description": "기존 벤치마킹 스위트를 moresampler와 world4utau, ENUNU/NNSVS, TuneLab까지 포함하도록 확장하고, 재현 가능한 렌더 시간, CPU/메모리 사용량, 객관적 품질 지표에 중점을 둡니다.",
+        "status": "pending",
+        "dependencies": [
+          7,
+          11,
+          12,
+          13,
+          14,
+          15,
+          17
+        ],
+        "priority": "high",
+        "details": "The task involves extending the benchmarking framework established in Task 13 to cover a broader range of speech synthesis engines. This includes:\n1.  **Integration of New Engines**:\n    *   **moresampler**: Research and implement integration points for `moresampler`. This likely involves command-line execution and parsing its output or interacting with its API.\n    *   **world4utau**: Leverage existing UTAU compatibility work (Task 7, 11) to integrate `world4utau` into the suite. This will involve setting up `world4utau` as a comparable resampler/engine.\n    *   **ENUNU/NNSVS**: Ensure robust integration and configuration for `ENUNU/NNSVS` as a benchmark target, including necessary environment setups and model loading.\n    *   **TuneLab Engines**: Utilize the TuneLab extension (Task 12) to benchmark `voceversa` within the TuneLab environment and compare against native TuneLab synthesis.\n2.  **Metric Collection**:\n    *   **Render-time**: Implement precise timing mechanisms for each engine's synthesis process, from input to output. Account for warm-up times and caching effects.\n    *   **CPU/Memory Usage**: Integrate system monitoring tools (e.g., `psutil` for Python, platform-specific tools for C++) to capture peak and average CPU utilization and memory footprint during synthesis for each engine.\n    *   **Quality Proxies**: Implement calculation of objective audio quality metrics such as PESQ (Perceptual Evaluation of Speech Quality), STOI (Short-Time Objective Intelligibility), or other SNR-like measures. This requires a 'golden dataset' (from Task 13) with reference audio. Develop methods to compare synthesized pitch contours and timing against reference data, potentially using dynamic time warping (DTW) or similar algorithms.\n3.  **Reproducibility and Documentation**:\n    *   Ensure the entire benchmarking process is fully scriptable and reproducible across different environments and operating systems.\n    *   Document the setup process for each engine, the methodology for metric collection, and the interpretation of results in a comprehensive README or dedicated documentation.\n    *   Provide clear instructions for running the suite and analyzing the output.\n4.  **Output and Reporting**:\n    *   Standardize output formats (e.g., CSV, JSON) for all collected metrics, ensuring easy parsing and analysis.\n    *   Develop basic reporting scripts to generate comparative charts and summaries, highlighting performance differences and quality trends.",
+        "testStrategy": "1.  **Engine Integration Validation**: For each target engine (moresampler, world44utau, ENUNU/NNSVS, TuneLab), run a small set of test cases to confirm successful integration, correct execution, and valid audio output. Verify that all necessary configurations and dependencies for each engine are correctly handled.\n2.  **Metric Accuracy Verification**:\n    *   **Render-time**: Manually time a few synthesis operations for each engine and compare against automated measurements to ensure accuracy and consistency across multiple runs.\n    *   **CPU/Memory**: Monitor system resources during benchmark runs using external tools (e.g., Task Manager, `htop`, `top`) and compare against reported metrics for consistency and plausibility.\n    *   **Quality Proxies**: For a subset of the golden dataset, manually inspect synthesized audio and compare it against reference audio, cross-referencing with calculated objective scores to ensure they align with perceptual quality and expected behavior.\n3.  **Reproducibility Testing**: Execute the full benchmark suite multiple times on the same hardware and software configuration to verify consistent results for all metrics (render-time, CPU/memory, quality proxies). Document any observed variances and their acceptable thresholds.\n4.  **Documentation Review**: Have an independent team member review the documentation for clarity, completeness, and accuracy, ensuring all setup and execution steps are easily understandable and executable by someone unfamiliar with the project.\n5.  **Edge Case Testing**: Include challenging cases from the golden dataset (e.g., extreme pitch shifts, complex phoneme sequences, long phrases, very short notes) to stress-test each engine and the metric collection system, identifying potential failure points or performance bottlenecks.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "입력 코퍼스/시나리오 선정 및 고정화",
+            "description": "공개 사용 가능한 샘플 셋 수집, 라이선스 확인, 고정 파라미터 정의",
+            "status": "pending",
+            "dependencies": [],
+            "details": "공개 라이선스 코퍼스(예: CMU Arctic 등)와 자체 샘플을 선정합니다. 샘플레이트/비트뎁스/길이/피치 변조 시나리오를 고정하며, 재현 가능한 랜덤 시드와 메타데이터(라이선스/출처)를 포함합니다.",
+            "testStrategy": "재현성: 동일 환경에서 재실행 시 메트릭 분산이 허용 범위 내인지 검증\n라이선스: 라이선스 체크리스트 자동 점검"
+          },
+          {
+            "id": 2,
+            "title": "벤치마크 러너/스크립트 작성",
+            "description": "각 엔진 호출 스크립트, 타임/CPU/메모리 계측, 결과 수집 포맷 설계",
+            "status": "pending",
+            "dependencies": [],
+            "details": "tools/bench에 공통 인터페이스의 러너를 구현합니다.\n- 시간: /usr/bin/time 또는 고해상도 타이머\n- 자원: psutil(또는 플랫폼별)로 CPU/메모리 수집\n- 출력: CSV/JSON 통일 포맷, 실패 시 리트라이/로그 수집",
+            "testStrategy": "드라이런: 더미 엔진으로 파이프라인이 끝까지 실행되는지 확인\n계측: 수동 타이밍과 자동 측정값 일치 여부 샘플 검증"
+          },
+          {
+            "id": 3,
+            "title": "리포트 생성 및 문서화",
+            "description": "표/그래프 자동 생성, 결과 해석 및 위치 선정 메시지 제안",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Python(matplotlib/pandas)으로 결과 집계 및 시각화 스크립트 작성, docs/benchmarks에 리포트 생성. 재현 가능한 빌드 파이프라인으로 그래프/표를 갱신합니다.",
+            "testStrategy": "재현성: 동일 입력에 동일 그래프 생성 확인\n정합성: 원시 메트릭과 리포트 수치의 무작위 샘플 교차검증"
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "호환성 안전장치 및 합성 후 필터",
+        "description": "견고한 플래그 맵핑 테이블과 회귀 스냅샷 테스트 등 호환성 안전장치를 구현하고, 포먼트 시프트와 무성/유성 비율 조정을 위한 선택적 합성 후 필터를 모듈형으로 개발합니다.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3,
+          5,
+          7,
+          15,
+          17
+        ],
+        "priority": "medium",
+        "details": "This task focuses on enhancing the robustness and flexibility of the synthesis pipeline. \n\n1.  **Compatibility Safeguards Implementation:**\n    *   **Flag Mapping Tables Refinement:** Build upon the existing UTAU flag parsing (Task 15) and OpenUtau integration (Task 17) to create comprehensive, configurable flag mapping tables. These tables will ensure that all relevant UTAU flags (e.g., gender, modulation, velocity, start/end offsets) are correctly interpreted and translated into internal synthesis parameters for all supported backends (WORLD, PSOLA, ONNX). Consider a declarative format (e.g., JSON, YAML) for these mappings to allow for easy updates and extensions.\n    *   **Regression Snapshot Testing Framework:** Develop an automated system for generating and comparing synthesis output snapshots. This system should:\n        *   Capture key synthesis artifacts (e.g., generated audio WAV, extracted F0, spectral parameters, internal data packets) for a predefined set of test cases.\n        *   Store these as baseline 'snapshots'.\n        *   Implement a comparison mechanism (e.g., audio diff, numerical comparison of parameter arrays with tolerance) to detect regressions when code changes are introduced.\n        *   Integrate this into the CI/CD pipeline (leveraging Task 17's CI snapshot tests) to run automatically on pull requests or commits.\n\n2.  **Optional Post-Synthesis Filters Development:**\n    *   **Modular Design:** Implement each post-filter as a separate, pluggable module, ideally conforming to the `ISynthesisNode` interface (Task 2) or a similar processing node abstraction. This allows them to be chained or applied selectively.\n    *   **Formant Shift Module:** Develop a module that can apply a formant shift to the synthesized audio. This should allow for adjustable shift amounts (e.g., in semitones or Hz) and potentially different algorithms (e.g., simple spectral scaling, more advanced vocoder-based methods).\n    *   **Unvoiced/Voiced Adjustments Module:** Create a module to manipulate the unvoiced/voiced characteristics of the synthesized speech. This could include:\n        *   Adjusting the balance between voiced and unvoiced components.\n        *   Modifying the aperiodicity (noise) levels in voiced segments.\n        *   Allowing for global or time-varying adjustments.\n    *   **Integration Points:** Ensure these post-filters can be easily inserted into the synthesis pipeline after the core synthesis backends (Task 3, 5, 6) but before final audio output.\n\nConsiderations:\n*   Performance impact of post-filters, especially for real-time applications.\n*   User-configurable parameters for each filter.\n*   Error handling and robust parameter validation for all new components.",
+        "testStrategy": "1.  **Unit Tests:**\n    *   Develop comprehensive unit tests for the flag mapping logic, covering various UTAU flag combinations, edge cases, and invalid inputs to ensure correct parameter translation.\n    *   Create unit tests for each post-filter module (formant shift, unvoiced/voiced adjustments) to verify their specific transformations on synthetic or pre-recorded audio segments.\n\n2.  **Integration Tests (Regression Snapshot System):**\n    *   Define a diverse set of test cases covering different voicebanks, UTAU flags, pitch curves, and synthesis backends (WORLD, PSOLA, ONNX).\n    *   Implement automated snapshot generation for these test cases, capturing audio and key internal parameters.\n    *   Develop a robust comparison algorithm for snapshots, including configurable tolerances for numerical differences and perceptual metrics for audio.\n    *   Integrate the snapshot tests into the CI/CD pipeline to automatically detect regressions on every code change.\n    *   Verify that the snapshot system correctly identifies intentional changes versus unintended regressions.\n\n3.  **Functional Testing (Post-Filters):**\n    *   Apply each post-filter to synthesized audio from various backends and verify the expected sonic changes through spectral analysis, waveform inspection, and subjective listening tests.\n    *   Test the chaining of multiple post-filters to ensure they interact correctly.\n    *   Verify that the post-filters can be enabled/disabled and configured via their respective parameters.\n\n4.  **Performance Testing:**\n    *   Measure the latency and CPU overhead introduced by the post-filters to ensure they meet real-time performance requirements, especially when chained.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "플래그 맵핑 테이블/호환 매트릭스 문서화",
+            "description": "moresampler/straycat 대비 지원/미지원 항목, 대체 전략, 경고 메시지 정책 포함",
+            "status": "pending",
+            "dependencies": [],
+            "details": "docs/compat-matrix.md에 백엔드별 지원 여부/제한/대체전략을 표로 문서화하고, 런타임 경고 정책과 예시를 포함합니다. JSON 매핑 설정과 동기화 스크립트를 제공합니다.",
+            "testStrategy": "문서-구현 싱크: 매핑 JSON을 로드해 어댑터에 적용하고 문서 표와 자동 대조\n정적: JSON Schema/링트로 구문 오류 방지"
+          },
+          {
+            "id": 2,
+            "title": "회귀 스냅샷 테스트 워크플로우",
+            "description": "호스트별(OU/CLI) 고정 입력에 대한 출력 해시/메트릭 회귀 파이프라인 GitHub Actions에 추가",
+            "status": "pending",
+            "dependencies": [],
+            "details": "GitHub Actions에서 골든 산출물과 현재 산출물을 비교하는 잡을 추가합니다. 오디오/피치/스펙트럼 메트릭을 계산하고 허용 오차 이내인지 판정, 골든 갱신 절차 문서화.",
+            "testStrategy": "PR: 변경 시 자동 실행, 차이 리포트 업로드, 의도된 변경 시 골든 업데이트 플로우 검증"
+          },
+          {
+            "id": 3,
+            "title": "옵션 포스트필터 모듈 설계",
+            "description": "포먼트 시프팅/UV 비율 조정 모듈 인터페이스와 안전 기본값 설계(기본 바이패스)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "IPostFilter 인터페이스와 파라미터(formantShift[semitones], uvBalance[0..1], mix[0..1])를 정의합니다. 기본값은 바이패스이며, 체인 가능한 구조와 실시간 안전 변경을 지원합니다.",
+            "testStrategy": "단위: 항등/경계 파라미터에서 안정 동작 확인\n품질: 합성 샘플에 적용 시 스펙트럼 변화와 청감 평가 일치 검증\n성능: 프레임 처리 시간 상한 검증"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "vv_world CLI 문서와 예제 구축",
+        "description": "`vv_world` CLI와 코어 라이브러리에 대한 간결한 문서와 실용 예제를 작성합니다. 입력/출력 사양, 자주 쓰는 사용 패턴, 트러블슈팅을 포함합니다.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3,
+          4,
+          7,
+          11,
+          14,
+          15,
+          19
+        ],
+        "priority": "high",
+        "details": "This task involves developing comprehensive user-facing documentation and runnable examples for the `vv_world` command-line interface and its underlying core library. The documentation should be structured for clarity and ease of use, targeting both end-users and developers.\n\n1.  **`vv_world` CLI Reference**:\n    *   **Installation & Setup**: Provide brief instructions on how to obtain and run `vv_world` (assuming pre-built binaries or a simple build process).\n    *   **General Usage**: Explain the basic command structure and common global options (e.g., `--help`, `--version`).\n    *   **Core Commands Documentation**: Detail each primary CLI command, including its purpose, all available arguments, accepted values, and default behaviors. This includes:\n        *   `analyze`: Document input (WAV) and output (`f0.txt`, `sp.bin`, `ap.bin`, `meta.json`) specifications. Explain parameters like frame period and F0 estimation algorithms (Harvest/DIO).\n        *   `synthesize`: Document input (`f0.txt`, `sp.bin`, `ap.bin`, `meta.json`) and output (WAV) specifications. Explain parameters like synthesis engine selection (WORLD, PSOLA, ONNX) and output audio properties (sample rate, bit depth).\n        *   `resample` (UTAU compatibility mode): Document the `resampler.exe`/`wavtool.exe` compatible arguments, how UTAU flags (e.g., gender, modulation, velocity) are interpreted and mapped to internal parameters.\n        *   `server`: Explain how to start and interact with the persistent resampler server, including available IPC options (HTTP/gRPC/UDS) and client usage examples.\n        *   `filter`: Describe how to apply post-synthesis filters (e.g., formant shift, unvoiced/voiced adjustments), including their parameters and effects.\n    *   **Input/Output Specifications**: Provide detailed descriptions of all supported file formats (`.wav`, `.txt`, `.bin`, `.json`), including data types, endianness, and structural layouts.\n\n2.  **Core Library API Usage (e.g., C++/Python)**:\n    *   **Initialization**: Demonstrate how to initialize the `vv_world` core library.\n    *   **`DataPacket` Handling**: Provide examples of creating, populating, and accessing `DataPacket` objects.\n    *   **Node Execution**: Illustrate how to instantiate and run core processing nodes like `WorldAnalysisNode`, `WorldSynthesisNode`, `UnitSelectionNode`, `OnnxInferenceNode`, and `LlsmModelNode` directly.\n    *   **Parameter Passing**: Show how to pass configuration parameters to individual nodes.\n    *   **Error Handling**: Document best practices for handling errors returned by the library.\n\n3.  **Common Recipes & Workflows**: Provide step-by-step guides for typical use cases, such as:\n    *   \"Full analysis-synthesis pipeline from WAV to WAV.\"\n    *   \"Generating UTAU-compatible voicebank artifacts from a raw WAV.\"\n    *   \"Synthesizing from UTAU `.ust` files using `vv_world` as a resampler.\"\n    *   \"Using the persistent server for low-latency synthesis.\"\n    *   \"Applying post-synthesis effects to an existing WAV.\"\n    *   \"Batch processing multiple audio files.\"\n\n4.  **Troubleshooting Guide**: Compile a list of common issues, their typical error messages, and actionable solutions (e.g., missing dependencies, invalid input formats, performance bottlenecks, distorted audio).",
+        "testStrategy": "1.  **Automated Example Validation**: Implement automated scripts (e.g., shell scripts for CLI, Python scripts for core library) to execute all commands and code examples provided in the documentation. Verify that they run without errors and produce the expected output files or data. Compare output audio/data against known good references where applicable.\n2.  **Documentation Review**: Conduct thorough internal reviews by developers and, if possible, external user acceptance testing (UAT) by target users to ensure clarity, accuracy, completeness, and ease of understanding. Collect feedback on terminology, formatting, and overall usability.\n3.  **Input/Output Specification Verification**: Systematically validate that the documented input and output specifications precisely match the actual behavior and requirements of the `vv_world` implementation.\n4.  **Troubleshooting Scenario Testing**: For each entry in the troubleshooting guide, simulate the described problem and verify that the provided solution effectively resolves the issue.\n5.  **Coverage Review**: Ensure that all major CLI commands, core library functionalities, and common use cases are adequately covered in the documentation, leaving no significant gaps.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "vv_world 기본 사용 가이드 작성",
+            "description": "입력/출력 인자, 파이프라인 개요, 필수/선택 플래그 설명 포함",
+            "status": "pending",
+            "dependencies": [],
+            "details": "docs/cli/README.md에 설치, --help 출력, 기본 서브커맨드(analyze/synthesize/resample/server/filter) 개요, 예시 인자를 정리합니다. 오류 코드/종료 코드 테이블과 자주 묻는 질문을 포함합니다.",
+            "testStrategy": "스크립트로 --help 및 기본 예시 실행 스모크 테스트, 문서 내 커맨드가 모두 성공하는지 점검"
+          },
+          {
+            "id": 2,
+            "title": "예제 레시피 추가",
+            "description": "WORLD 분석/합성 예제, PSOLA 예제, ONNX 추론 예제 각각 최소 1개",
+            "status": "pending",
+            "dependencies": [],
+            "details": "examples/vv_world/에 스크립트와 샘플 데이터를 배치합니다.\n- WAV→분석→합성\n- UTAU 호환 리샘플링\n- ONNX 추론 경로\n모든 예제는 산출물 경로와 기대 파일 목록을 문서화합니다.",
+            "testStrategy": "예제 실행 후 산출물 존재/포맷 확인, 필요 시 간단한 품질/시간 메트릭 수집"
+          },
+          {
+            "id": 3,
+            "title": "I/O 사양 및 에러 코드 표 정리",
+            "description": "입출력 파일 포맷, 샘플레이트/채널 정책, 리턴코드/에러 메시지 표",
+            "status": "pending",
+            "dependencies": [],
+            "details": "지원 포맷(WAV/f0.txt/sp.bin/ap.bin/meta.json)의 필드/엔디안/정밀도를 표로 정리하고, CLI 리턴코드와 에러 메시지 매핑표를 문서화합니다. JSON Schema(메타) 제공.",
+            "testStrategy": "문서-코드 싱크 검사: 스키마로 메타 파일 검증, 에러 코드 표와 실제 코드 상수 교차검증"
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "WORLD 파이프라인 성능 옵션 노출",
+        "description": "멀티스레딩, 블록 처리, 윈도우 종류, STFT 파라미터를 사용자 조절 옵션으로 노출하고 안전하고 합리적인 기본값을 제공합니다.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3,
+          4,
+          20
+        ],
+        "priority": "medium",
+        "details": "This task involves enhancing the WORLD analysis and synthesis pipeline by exposing key performance and quality parameters as user-tunable options. The goal is to provide users with greater control over the trade-offs between processing speed, resource usage, and audio quality.\n\n1.  **Parameter Identification and Integration:**\n    *   **Multithreading:** Implement an option to control the number of threads used for parallel processing within the `WorldAnalysisNode` and `WorldSynthesisNode`. This could involve a thread pool or parallel loops for frame-level operations.\n    *   **Block Processing (Frame Parameters):** Expose `frame_period` (hop size) and `fft_size` as configurable options. These directly impact the granularity of analysis/synthesis and computational load.\n    *   **Window Types:** Allow users to select different window functions for STFT, such as Hanning, Hamming, Blackman, or Rectangular. This will require modifying the STFT utility functions used by WORLD.\n    *   **STFT/Analysis Parameters:** Expose other relevant WORLD parameters like `f0_floor`, `f0_ceil`, and `alpha` (for CheapTrick spectral envelope estimation).\n\n2.  **Exposure Mechanism:**\n    *   Integrate these new parameters into the `vv_world` command-line interface (CLI) as optional arguments.\n    *   Ensure that `WorldAnalysisNode` and `WorldSynthesisNode` (Task 3) can accept and utilize these parameters, potentially via their initialization or `process()` methods, or by extending the `DataPacket` (Task 2) to carry configuration.\n    *   Define robust and safe default values for all new options to ensure good out-of-the-box performance and quality.\n\n3.  **Documentation:**\n    *   Update the `vv_world` CLI usage guide and examples (Task 20) to thoroughly document each new option, including its purpose, valid range, default value, and potential impact on performance and audio quality.\n    *   Provide practical examples demonstrating how to use these options to achieve different performance/quality profiles.",
+        "testStrategy": "1.  **Unit Tests:** Develop unit tests for parameter parsing and validation within the CLI and for ensuring that the `WorldAnalysisNode` and `WorldSynthesisNode` correctly apply the received parameters.\n2.  **Functional Tests:** Run `vv_world` with various combinations of the newly exposed parameters (e.g., different thread counts, frame periods, window types, F0 ranges) to verify correct execution and output.\n3.  **Performance Benchmarking:** Conduct systematic performance tests (CPU usage, memory footprint, execution time) using the benchmarking suite (Task 18) across a range of parameter settings, especially for multithreading and block processing, to quantify their impact.\n4.  **Audio Quality Assessment:** Perform objective (e.g., PESQ, STOI) and subjective listening tests on synthesized audio generated with different parameter combinations to ensure that quality remains acceptable or improves as expected.\n5.  **Documentation Verification:** Review the updated CLI usage guide and examples (Task 20) to confirm accuracy, clarity, and completeness of the new options' documentation.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "멀티스레딩/블록처리 옵션 노출",
+            "description": "스레드 수, 프레임 블록 크기, 워크스틸링 기본값 정의 및 CLI 플래그화",
+            "status": "pending",
+            "dependencies": [],
+            "details": "CLI 플래그: --threads, --block-frames, --work-stealing.\n- 기본값: 하드웨어 스레드 수 감지, 블록 크기 자동 추정\n- 범위: 하드코어 상한/하한 및 유효성 검사\n- 전파: WorldAnalysis/Synthesis 노드에 안전하게 전달",
+            "testStrategy": "기능: 다양한 조합으로 실행 성공 및 크래시/데드락 없음 확인\n성능: 벤치 스위트로 시간 단축/스케일링 특성 측정"
+          },
+          {
+            "id": 2,
+            "title": "윈도우/STFT 파라미터 노출",
+            "description": "윈도우 종류, FFT 크기, 홉사이즈, 프리엠퍼시스 옵션 노출 및 문서화",
+            "status": "pending",
+            "dependencies": [],
+            "details": "CLI 플래그: --window(hann/hamming/blackman/rect), --fft-size, --hop, --preemphasis.\n- 검증: 파워오브투, 범위 체크, 상호 제약 확인\n- 품질: 파라미터가 합성 품질/속도에 미치는 영향 문서화",
+            "testStrategy": "단위: 파라미터 파싱/검증 테스트\n품질: 주요 조합에서 객관/주관 품질 측정(PESQ/STOI)"
+          },
+          {
+            "id": 3,
+            "title": "안전 기본값 및 호환성 가이드",
+            "description": "OpenUtau/UTAU 호환에 안전한 기본값과 권장 조합 표 작성",
+            "status": "pending",
+            "dependencies": [],
+            "details": "docs/compat_recipes.md에 호스트별(OU/CLI) 안전 기본값과 권장 조합을 표로 정리하고, 문제 발생 시 대체 설정을 제시합니다.",
+            "testStrategy": "샘플 프로젝트로 가이드 조합을 실행해 성공/품질 기준 충족 여부 확인"
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "고급 합성 모드: 포먼트 보존 & 글로털 파라미터 프로토타이핑",
+        "description": "GPL 오염 없이 포먼트 보존 개선과 고급 글로털 파라미터 실험에 초점을 둔 선택적 합성 모듈을 프로토타입하고 평가합니다.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "priority": "low",
+        "details": "This R&D task involves exploring and implementing advanced signal processing techniques to enhance the quality and control of synthesized speech, specifically targeting formant preservation and glottal source modeling.\n\n1.  **Research and Algorithm Selection:**\n    *   Identify state-of-the-art algorithms for robust formant tracking and preservation during pitch/duration modification (e.g., alternative spectral envelope estimation methods, adaptive filtering techniques).\n    *   Investigate advanced glottal source models beyond simple aperiodicity, such as glottal inverse filtering, Liljencrants-Fant (LF) model, or other parametric glottal flow models, to enable finer control over voice quality (e.g., breathiness, vocal fry).\n    *   Prioritize algorithms that can be implemented from scratch or are available under permissively licensed (e.g., MIT, Apache 2.0, BSD) terms to strictly avoid GPL contamination.\n\n2.  **Module Design and Implementation:**\n    *   Design new `ISynthesisNode` or `IAnalysisNode` derived classes, or extend existing `WorldAnalysisNode`/`WorldSynthesisNode` functionalities, to encapsulate these experimental algorithms.\n    *   Ensure the new modules are optional and can be easily integrated into the existing `ComputationGraph` (Task 2) for A/B testing against current methods.\n    *   For formant preservation, implement techniques that explicitly model and preserve formant frequencies and bandwidths throughout the synthesis process, potentially as an alternative or enhancement to `CheapTrick` within WORLD.\n    *   For glottal parameters, develop methods to extract more detailed glottal source characteristics from input audio and allow for their manipulation during synthesis, providing new control parameters to users.\n\n3.  **Integration and Parameterization:**\n    *   Integrate the prototyped modules into the synthesis pipeline, ensuring compatibility with existing `DataPacket` structures (Task 2).\n    *   Define clear, configurable parameters for each new module, allowing for experimental tuning and future exposure to users.\n\n4.  **Documentation:**\n    *   Document the theoretical basis, implementation choices, and parameterization of each prototyped module.",
+        "testStrategy": "A multi-faceted testing approach will be employed to validate the functionality, quality, and performance of the new synthesis modules.\n\n1.  **Unit Tests:**\n    *   Develop comprehensive unit tests for each new algorithm or sub-component within the prototyped modules. These tests should verify mathematical correctness, handle edge cases, and ensure expected outputs for controlled inputs (e.g., synthetic signals).\n    *   Test the extraction and manipulation of specific formant and glottal parameters independently.\n\n2.  **Integration Tests:**\n    *   Verify that the new `ISynthesisNode` or `IAnalysisNode` implementations integrate seamlessly into the `ComputationGraph` and correctly process `DataPacket`s.\n    *   Test the optional enabling/disabling mechanism for the new modules, ensuring that the pipeline functions correctly with and without them.\n\n3.  **Objective Quality Evaluation:**\n    *   Prepare a diverse dataset of test audio samples covering various speakers, pitches, and voice qualities.\n    *   Synthesize these samples using both the baseline (current WORLD pipeline) and the new experimental modules.\n    *   Employ objective metrics to compare the synthesized outputs:\n        *   **Formant Accuracy:** Use specialized tools to track formant frequencies and bandwidths in both original and synthesized audio, quantifying preservation.\n        *   **Glottal Source Analysis:** Analyze glottal flow derivatives (e.g., using open-source tools like Praat or custom scripts) to compare glottal parameters (e.g., open quotient, speed quotient) between original and synthesized speech.\n        *   **General Quality:** Utilize metrics like Mel-Cepstral Distortion (MCD), PESQ (Perceptual Evaluation of Speech Quality), and STOI (Short-Time Objective Intelligibility) to assess overall speech quality and intelligibility.\n\n4.  **Subjective Listening Tests:**\n    *   Conduct blind listening tests with human evaluators to assess the perceived naturalness, intelligibility, and the specific impact of formant preservation and glottal parameter manipulation on voice quality.\n    *   Gather feedback on the perceived improvements or degradations compared to the baseline.\n\n5.  **Performance Benchmarking:**\n    *   Measure the computational overhead (CPU usage, memory consumption, processing time) introduced by the new modules.\n    *   Compare the performance against the existing synthesis pipeline to ensure that quality improvements do not lead to unacceptable performance regressions.\n\n6.  **License Compliance Audit:**\n    *   Rigorously review all new code and any integrated third-party components to confirm strict adherence to the non-GPL licensing requirement, ensuring no contamination.",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-09T11:30:33.895Z",
-      "updated": "2025-08-10T06:15:14.935Z",
+      "updated": "2025-08-10T07:05:47.831Z",
       "description": "Tasks for master context"
     }
   }
