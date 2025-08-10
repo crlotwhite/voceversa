@@ -202,9 +202,9 @@
             "id": 6,
             "title": "WorldSynthesisNode에 포스트필터 훅 추가",
             "description": "포먼트 시프팅/UV 조정 등 선택적 후처리를 위한 훅 포인트를 WorldSynthesisNode에 추가하고 기본값은 완전 바이패스.",
-            "details": "WorldSynthesisNode::process() 최종 출력 직전에 후처리 체인을 연결할 수 있는 훅을 추가합니다.\n- 인터페이스: IPostFilter(prepare(sampleRate, channels), process(float* interleaved, frames), reset()) 정의\n- 파이프라인: 합성 결과 버퍼 → (옵션) 포스트필터 체인 → 출력\n- 구성: DataPacket 혹은 노드 설정으로 필터 on/off 및 파라미터(formantShift, uvBalance 등) 전달\n- 기본값: 필터 체인 비워진 상태로 완전 바이패스(연산 오버헤드 최소화)\n- 성능: 큰 버퍼에서는 블록 처리, 실시간 경로에서는 작은 청크 처리와 lock-free 큐 고려\n- 안전성: 파라미터 변경 시 thread-safe 스냅샷 교체(더블 버퍼링)로 글리치 방지",
+            "details": "WorldSynthesisNode::process() 최종 출력 직전에 후처리 체인을 연결할 수 있는 훅을 추가합니다.\n- 인터페이스: IPostFilter(prepare(sampleRate, channels), process(float* interleaved, frames), reset()) 정의\n- 파이프라인: 합성 결과 버퍼 → (옵션) 포스트필터 체인 → 출력\n- 구성: DataPacket 혹은 노드 설정으로 필터 on/off 및 파라미터(formantShift, uvBalance 등) 전달\n- 기본값: 필터 체인 비워진 상태로 완전 바이패스(연산 오버헤드 최소화)\n- 성능: 큰 버퍼에서는 블록 처리, 실시간 경로에서는 작은 청크 처리와 lock-free 큐 고려\n- 안전성: 파라미터 변경 시 thread-safe 스냅샷 교체(더블 버퍼링)로 글리치 방지\n<info added on 2025-08-10T08:16:01.186Z>\nNext: add a minimal DummyGainFilter for unit testing and write tests: (1) bypass equality within epsilon, (2) gain!=1 changes level.\n</info added on 2025-08-10T08:16:01.186Z>",
             "testStrategy": "단위: (1) 바이패스 시 입력==출력(허용 오차 내) 확인, (2) 더미 필터(고정 게인) 적용 시 스펙트럼/레벨 변화 검증\n통합: WORLD 합성 경로에 필터 체인 삽입 후 라운드트립 품질/지연 측정\n성능: 필터 on/off 상태에서 CPU 사용률, 처리 시간 측정(프레임 크기별)",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 3
           }
@@ -1102,7 +1102,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T11:30:33.895Z",
-      "updated": "2025-08-10T07:05:47.831Z",
+      "updated": "2025-08-10T08:16:40.236Z",
       "description": "Tasks for master context"
     }
   }
