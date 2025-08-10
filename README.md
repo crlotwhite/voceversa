@@ -29,6 +29,7 @@ scripts\build.bat debug
 - Test checks stdout contains `Hello, Voceversa!`.
 - asmjit 적용 검토 문서: `docs/asmjit_evaluation.md`
 - FFT 라이브러리 비교 리포트: `docs/fft_libraries_report.md`
+- 경량 DSP 라이브러리 요구사항/설계: `docs/vv_dsp_requirements_and_design.md`
 
 ## Dependencies
 
