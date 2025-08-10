@@ -1,6 +1,6 @@
 {
 	"meta": {
-		"generatedAt": "2025-08-09T18:46:15.055Z",
+		"generatedAt": "2025-08-09T18:46:57.281Z",
 		"tasksAnalyzed": 1,
 		"totalTasks": 11,
 		"analysisCount": 6,
@@ -14,48 +14,48 @@
 			"taskTitle": "PSOLA 기반 유닛 선택 합성 시스템 구현",
 			"complexityScore": 9,
 			"recommendedSubtasks": 6,
-			"expansionPrompt": "이 작업을 PSOLA 알고리즘의 핵심 구성요소별로 세분화하여, 각각이 독립적으로 개발 및 테스트 가능하도록 분할하십시오. 피치 마킹/분석, 데이터베이스 설계, 유닛 선택 알고리즘, PSOLA 변형 엔진, 통합 노드, 그리고 성능 최적화 단계로 나누어 주십시오.",
-			"reasoning": "완전히 새로운 음성 합성 시스템으로, 복잡한 신호 처리 알고리즘과 음성 데이터베이스 관리가 필요. 기존 코드베이스에 PSOLA 관련 구현이 전혀 없어 처음부터 개발해야 함. 이미 5개 서브태스크가 정의되어 있지만 실제 구현의 복잡성을 고려하면 6개로 확장 권장."
+			"expansionPrompt": "PSOLA 합성 시스템을 위해 피치 마킹, 음성 DB, 유닛 선택, PSOLA 엔진, 노드 통합, 품질 최적화 단계로 세분화하여 각각 독립적이고 테스트 가능한 서브태스크로 확장하세요.",
+			"reasoning": "기존 5개 서브태스크가 있지만 PSOLA 품질 튜닝 및 최적화 단계가 추가로 필요. 복잡한 신호처리 알고리즘과 실시간 성능 요구사항으로 인해 높은 복잡도."
 		},
 		{
-			"taskId": 11,
-			"taskTitle": "UTAU 포맷 아티팩트 생성 및 호환성 검증",
-			"complexityScore": 6,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "기존 UtauWorldInterface 기반으로 UTAU 포맷 호환성을 개선하고, world4utau와의 완전한 호환성을 위한 세부 검증 작업으로 나누어 주십시오. 포맷 호환성 검증, 품질 게이트 구현, 빌드 시스템 통합, 스모크 테스트 구성으로 세분화하여 주십시오.",
-			"reasoning": "기존 UtauWorldInterface와 vv_world 도구가 이미 구현되어 있어 기반이 탄탄함. UTAU 포맷 I/O 기능이 대부분 완성되어 있고, 주로 호환성 검증과 품질 게이트 설정에 집중하면 됨. 중간 수준의 복잡도."
-		},
-		{
-			"taskId": 10,
-			"taskTitle": "GitHub Actions CI/CD 파이프라인 및 크로스플랫폼 빌드 자동화",
+			"taskId": 7,
+			"taskTitle": "UTAU 호환 어댑터 및 플러그인 인터페이스 구현",
 			"complexityScore": 7,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "기존 CMake 빌드 시스템을 기반으로 GitHub Actions 워크플로우를 구성하고, 각 플랫폼별 빌드 매트릭스와 테스트 자동화를 단계별로 구현하십시오. 기본 CI 설정, 플랫폼별 빌드, 테스트 자동화, 아티팩트 관리, 코드 품질 검사로 나누어 주십시오.",
-			"reasoning": "CMake 기반 빌드 시스템이 잘 구성되어 있고 크로스플랫폼 지원 준비가 되어 있음. GitHub Actions 기본 구조(.github/workflows/ci.yml)가 이미 존재하므로 확장 작업 위주. 복잡하지만 표준화된 패턴 적용 가능."
+			"expansionPrompt": "UTAU 호환성을 위해 파라미터 파싱, 어댑터 구현, 실행파일 생성, 설치 스크립트, 통합 테스트 단계로 확장하세요. 기존 world4utau 분석 결과를 활용하여 구체적인 구현 단계를 정의하세요.",
+			"reasoning": "현재 in-progress 상태이며 기존 5개 서브태스크가 적절함. UTAU 호환성과 기존 world4utau 인터페이스 분석이 이미 일부 구현됨."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "ONNX Runtime 통합 및 딥러닝 추론 노드 구현",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "ONNX Runtime 통합을 위해 라이브러리 설정, 텐서 변환, 추론 노드, DiffSinger 지원, 배치/스트리밍 모드, 성능 최적화 단계로 확장하세요. GPU/CPU 백엔드 자동 선택과 메모리 관리를 중점적으로 다루세요.",
+			"reasoning": "기존 5개 서브태스크에 성능 최적화 단계가 추가로 필요. ONNX Runtime 통합과 DiffSinger 모델 지원은 복잡한 딥러닝 인프라 구축을 요구함."
 		},
 		{
 			"taskId": 9,
 			"taskTitle": "범용 C-ABI 공개 API 설계 및 구현",
 			"complexityScore": 7,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "기존 ISynthesisNode 인터페이스와 DataPacket 구조를 기반으로 C-ABI 호환 API를 설계하십시오. C 스타일 인터페이스 설계, 메모리 관리 및 에러 핸들링, 비동기 처리 지원, 동적 라이브러리 빌드, 언어별 바인딩 테스트로 세분화하여 주십시오.",
-			"reasoning": "기존 C++ 인터페이스(ISynthesisNode, DataPacket)가 잘 설계되어 있어 C-ABI 래핑이 상대적으로 명확함. 하지만 메모리 관리와 언어 간 호환성 보장이 복잡하고, 다양한 플랫폼에서의 동적 라이브러리 빌드 설정이 필요."
+			"expansionPrompt": "C-ABI API를 위해 헤더 설계, 핵심 함수 구현, 비동기 처리, 동적 라이브러리 빌드, 언어별 바인딩 예제 단계로 확장하세요. 크로스플랫폼 ABI 호환성과 메모리 안전성을 중점적으로 다루세요.",
+			"reasoning": "기존 5개 서브태스크가 적절함. C-ABI 설계는 플랫폼별 호환성과 언어 바인딩 고려사항이 많아 중간 복잡도."
 		},
 		{
-			"taskId": 8,
-			"taskTitle": "ONNX Runtime 통합 및 딥러닝 추론 노드 구현",
-			"complexityScore": 8,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "기존 ISynthesisNode 아키텍처를 따라 ONNX Runtime을 통합하고 OnnxInferenceNode를 구현하십시오. ONNX Runtime 통합, 텐서 데이터 변환, GPU/CPU 백엔드 지원, DiffSinger 모델 특화 지원, 성능 최적화로 세분화하여 주십시오.",
-			"reasoning": "기존 노드 아키텍처가 잘 설계되어 있어 새로운 노드 타입 추가가 용이함. 하지만 ONNX Runtime은 복잡한 외부 의존성이고, 텐서 변환과 GPU 지원은 상당한 기술적 복잡성을 가짐. 코드베이스에 딥러닝 관련 구현이 전혀 없음."
-		},
-		{
-			"taskId": 7,
-			"taskTitle": "UTAU 호환 어댑터 및 플러그인 인터페이스 구현",
+			"taskId": 10,
+			"taskTitle": "GitHub Actions CI/CD 파이프라인 및 크로스플랫폼 빌드 자동화",
 			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "CI/CD 파이프라인을 위해 워크플로우 설정, 캐싱 구성, 품질 검사 통합, 모바일 빌드 설정, 자동 배포 단계로 확장하세요. 기존 CMake 구조를 활용하여 구체적인 구현 방법을 제시하세요.",
+			"reasoning": "기존 5개 서브태스크가 적절함. 기존 CMake 인프라가 구축되어 있어 상대적으로 직관적인 작업이지만 플랫폼별 설정 복잡성이 있음."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "UTAU 포맷 아티팩트 생성 및 호환성 검증",
+			"complexityScore": 5,
 			"recommendedSubtasks": 4,
-			"expansionPrompt": "기존 UtauWorldInterface를 확장하여 완전한 UTAU 플러그인 시스템을 구현하십시오. UTAU 파라미터 파싱 강화, 다중 백엔드 지원 시스템, Windows 실행 파일 생성, UTAU 호환성 테스트로 세분화하여 주십시오.",
-			"reasoning": "UtauWorldInterface와 vv_world 도구의 기반이 이미 구축되어 있어 확장 작업 위주. UTAU 파라미터 처리와 Windows 실행 파일 생성이 주요 추가 작업. 현재 in-progress 상태로 어느 정도 진행된 상태."
+			"expansionPrompt": "UTAU 포맷 호환성을 위해 포맷 분석/구현, 아티팩트 생성기 구현, world4utau 호환성 검증, 품질 게이트 통합 단계로 확장하세요. 기존 UtauWorldInterface를 확장하여 완전한 호환성을 달성하세요.",
+			"reasoning": "기존 UtauWorldInterface가 부분적으로 구현되어 있고 WORLD 통합이 완료되어 상대적으로 낮은 복잡도. 4개 서브태스크면 충분함."
 		}
 	]
 }
