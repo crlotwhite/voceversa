@@ -27,6 +27,40 @@ scripts\build.bat debug
 - Uses C++17 and enables warnings.
 - If `fmt` is available via vcpkg/conan, it will be used; otherwise a local stub target satisfies linking.
 - Test checks stdout contains `Hello, Voceversa!`.
+- asmjit 적용 검토 문서: `docs/asmjit_evaluation.md`
+
+## Dependencies
+
+- Toolchain
+  - CMake >= 3.16
+  - C++17-capable compiler (Clang/GCC/MSVC)
+
+- Required
+  - fmt (vcpkg port: `fmt`)
+    - Already declared in `vcpkg.json`. Falls back to a local stub if not found.
+
+- Optional (enable as needed)
+  - WORLD vocoder (mmorise/World) — high-quality analysis/synthesis
+    - No official vcpkg port; this project can fetch via CMake `FetchContent` when `VOCEVERSA_USE_WORLD=ON`.
+  - FFT library — performance/accuracy
+    - `kissfft` or `fftw3` (vcpkg ports: `kissfft`, `fftw3`)
+    - macOS alternative: Accelerate/vDSP (system framework)
+  - Audio file I/O — broader format support
+    - `libsndfile` (vcpkg port: `libsndfile`)
+  - Logging
+    - `spdlog` (vcpkg port: `spdlog`)
+  - Testing framework (currently CTest + asserts)
+    - `catch2` or `gtest` (vcpkg ports: `catch2`, `gtest`)
+  - JSON handling (for robust metadata I/O)
+    - `nlohmann-json` (vcpkg port: `nlohmann-json`) or `rapidjson` (vcpkg port: `rapidjson`)
+  - CLI utilities (argument parsing for tools)
+    - `cli11` (vcpkg port: `cli11`)
+  - Realtime audio I/O (if needed)
+    - `portaudio` or `rtaudio` (vcpkg ports: `portaudio`, `rtaudio`)
+
+- macOS notes
+  - You can use the system Accelerate framework for FFTs instead of an external port.
+  - vcpkg triplet `arm64-osx` works well with the above ports.
 
 ## 왜 voceversa인가
 
