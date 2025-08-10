@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "core/DataPacket.h"
 #include "core/ComputationGraph.h"
@@ -73,9 +74,12 @@ int main() {
     // Basic WAV roundtrip (16-bit)
     {
         vv::wavio::WavData wd; wd.sampleRate = 48000; wd.channels = 1; wd.samples = {0.0f, 0.5f, -0.5f, 1.0f, -1.0f};
-        assert(vv::wavio::writeWav16("/tmp/vv_test16.wav", wd));
-        vv::wavio::WavData rd; assert(vv::wavio::readWav("/tmp/vv_test16.wav", rd));
+    namespace fs = std::filesystem;
+    const auto tmpPath = (fs::temp_directory_path() / "vv_test16.wav").string();
+    assert(vv::wavio::writeWav16(tmpPath, wd));
+    vv::wavio::WavData rd; assert(vv::wavio::readWav(tmpPath, rd));
         assert(rd.sampleRate == wd.sampleRate && rd.channels == wd.channels && rd.samples.size() == wd.samples.size());
+    std::error_code ec; fs::remove(tmpPath, ec); // best-effort cleanup
     }
 
     // Window functions size check and energy sanity
