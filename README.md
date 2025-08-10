@@ -28,6 +28,7 @@ scripts\build.bat debug
 - If `fmt` is available via vcpkg/conan, it will be used; otherwise a local stub target satisfies linking.
 - Test checks stdout contains `Hello, Voceversa!`.
 - asmjit 적용 검토 문서: `docs/asmjit_evaluation.md`
+- FFT 라이브러리 비교 리포트: `docs/fft_libraries_report.md`
 
 ## Dependencies
 
